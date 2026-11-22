@@ -64,7 +64,8 @@ class Generation extends Model
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        // A deleted user keeps their history, so the owner is looked up including soft deleted ones.
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     /** @return HasMany<WebhookEvent, $this> */

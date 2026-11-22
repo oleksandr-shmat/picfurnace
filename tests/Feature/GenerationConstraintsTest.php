@@ -56,3 +56,26 @@ it('stores a user as a regular user unless made admin', function () {
     expect(User::factory()->create()->isAdmin())->toBeFalse()
         ->and(User::factory()->admin()->create()->isAdmin())->toBeTrue();
 });
+
+it('keeps the history of a deleted user and still knows the owner', function () {
+    $generation = Generation::factory()->succeeded()->create();
+
+    $generation->user->delete();
+
+    expect(User::find($generation->user_id))->toBeNull()
+        ->and($generation->fresh()->user->trashed())->toBeTrue()
+        ->and(Generation::count())->toBe(1);
+});
+
+it('refuses to hard delete a user who has generations', function () {
+    $generation = Generation::factory()->create();
+
+    $generation->user->forceDelete();
+})->throws(QueryException::class, 'generations_user_id_foreign');
+
+it('refuses to hard delete a generation that has webhook events', function () {
+    $generation = Generation::factory()->create();
+    WebhookEvent::create(['event_id' => 'evt_1', 'generation_id' => $generation->id, 'type' => 'generation.processing', 'payload' => []]);
+
+    $generation->delete();
+})->throws(QueryException::class, 'webhook_events_generation_id_foreign');
