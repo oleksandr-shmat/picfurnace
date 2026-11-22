@@ -9,3 +9,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('generations:dispatch')->everyFiveSeconds()->withoutOverlapping();
+
+Schedule::command('generations:archive-images')->everyMinute()->withoutOverlapping();

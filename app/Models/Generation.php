@@ -34,6 +34,9 @@ use Illuminate\Support\Carbon;
  * @property string|null $failure_message
  * @property string|null $image_url
  * @property Carbon|null $image_expires_at
+ * @property string|null $image_path
+ * @property Carbon|null $image_stored_at
+ * @property Carbon|null $image_purged_at
  * @property int $attempts
  * @property Carbon|null $next_attempt_at
  * @property Carbon|null $claimed_at
@@ -56,6 +59,8 @@ class Generation extends Model
             'rates' => 'array',
             'usage' => 'array',
             'image_expires_at' => 'datetime',
+            'image_stored_at' => 'datetime',
+            'image_purged_at' => 'datetime',
             'next_attempt_at' => 'datetime',
             'claimed_at' => 'datetime',
             'submitted_at' => 'datetime',

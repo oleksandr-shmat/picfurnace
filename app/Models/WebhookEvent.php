@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Generations\WebhookOutcome;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -15,7 +16,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $generation_id
  * @property array<string, mixed> $payload
  * @property int $deliveries
- * @property string|null $outcome
+ * @property WebhookOutcome|null $outcome
  * @property Carbon|null $processed_at
  */
 class WebhookEvent extends Model
@@ -26,6 +27,7 @@ class WebhookEvent extends Model
     {
         return [
             'payload' => 'array',
+            'outcome' => WebhookOutcome::class,
             'processed_at' => 'datetime',
         ];
     }

@@ -21,7 +21,8 @@ use InvalidArgumentException;
  */
 final class PixelforgeClient
 {
-    private const string USER_AGENT = 'image-studio/1.0';
+    /** Also used for downloading images: the same Cloudflare proxy sits in front of them. */
+    public const string USER_AGENT = 'image-studio/1.0';
 
     private const int TIMEOUT_SECONDS = 15;
 

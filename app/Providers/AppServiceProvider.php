@@ -9,9 +9,11 @@ use App\Billing\Quoter;
 use App\Generations\GenerationDispatcher;
 use App\Generations\GenerationLifecycle;
 use App\Generations\GenerationSubmitter;
+use App\Generations\ImageArchive;
 use App\Pixelforge\CachedPricing;
 use App\Pixelforge\Limits;
 use App\Pixelforge\PixelforgeClient;
+use App\Pixelforge\WebhookSignature;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -49,6 +51,8 @@ class AppServiceProvider extends ServiceProvider
             $app->make(Billing::class),
             config('pixelforge.max_unfinished_generations_per_user'),
         ));
+        $this->app->singleton(WebhookSignature::class, fn () => new WebhookSignature((string) config('pixelforge.webhook_secret')));
+        $this->app->singleton(ImageArchive::class, fn () => new ImageArchive(config('images.disk'), config('images.retention_days')));
         $this->app->singleton(Markup::class, fn () => new Markup(config('billing.markup_percent')));
     }
 
