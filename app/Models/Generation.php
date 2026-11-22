@@ -36,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $image_expires_at
  * @property int $attempts
  * @property Carbon|null $next_attempt_at
+ * @property Carbon|null $claimed_at
  * @property Carbon|null $submitted_at
  * @property Carbon|null $completed_at
  */
@@ -56,6 +57,7 @@ class Generation extends Model
             'usage' => 'array',
             'image_expires_at' => 'datetime',
             'next_attempt_at' => 'datetime',
+            'claimed_at' => 'datetime',
             'submitted_at' => 'datetime',
             'completed_at' => 'datetime',
         ];

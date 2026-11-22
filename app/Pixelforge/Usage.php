@@ -41,6 +41,21 @@ final readonly class Usage
     }
 
     /**
+     * The token counts in the format of the API, as stored with a generation.
+     *
+     * @return array<string, int>
+     */
+    public function toArray(): array
+    {
+        return [
+            'input_text_tokens' => $this->inputText,
+            'input_image_tokens' => $this->inputImage,
+            'output_tokens' => $this->output,
+            'reasoning_tokens' => $this->reasoning,
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $usage
      */
     private static function tokens(array $usage, string $key): int

@@ -21,6 +21,15 @@ it('reads token counts from the usage object of a generation', function () {
         ->and($usage->reasoning)->toBe(206);
 });
 
+it('writes the counts in the API format', function () {
+    expect((new Usage(11, 765, 280, 206))->toArray())->toBe([
+        'input_text_tokens' => 11,
+        'input_image_tokens' => 765,
+        'output_tokens' => 280,
+        'reasoning_tokens' => 206,
+    ]);
+});
+
 it('rejects a negative count in any field', function (array $counts) {
     new Usage(...$counts);
 })->throws(InvalidArgumentException::class, 'cannot be negative')->with([

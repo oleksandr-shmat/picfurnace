@@ -22,6 +22,24 @@ it('converts per-million dollar rates to integer nanodollars per token', functio
         ->and(Usd::toInt($rates->reasoning))->toBe(12_500);
 });
 
+it('writes rates in the API format, so they read back unchanged', function () {
+    $rates = Rates::fromArray(pixelforgeFixture('pricing')['rates']);
+
+    expect($rates->toArray())->toBe([
+        'input_text_tokens' => '5.000000000',
+        'input_image_tokens' => '10.000000000',
+        'output_tokens' => '40.000000000',
+        'reasoning_tokens' => '12.500000000',
+    ])->and(Rates::fromArray($rates->toArray())->toArray())->toBe($rates->toArray());
+});
+
+it('lists the qualities and sizes it knows', function () {
+    $pricing = Pricing::fromArray(pixelforgeFixture('pricing'));
+
+    expect($pricing->qualities())->toBe(['low', 'medium', 'high'])
+        ->and($pricing->sizes())->toBe(['1024x1024', '1536x1024', '1024x1536']);
+});
+
 it('refuses rates with a missing key', function () {
     Rates::fromArray(['input_text_tokens' => '5.00']);
 })->throws(InvalidArgumentException::class);

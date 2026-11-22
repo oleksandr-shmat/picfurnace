@@ -43,6 +43,27 @@ final readonly class Rates
     }
 
     /**
+     * The rates in the format of the API (dollars per million tokens), as stored with a generation.
+     * `fromArray` reads this back.
+     *
+     * @return array<string, string>
+     */
+    public function toArray(): array
+    {
+        return [
+            'input_text_tokens' => self::perMillion($this->inputText),
+            'input_image_tokens' => self::perMillion($this->inputImage),
+            'output_tokens' => self::perMillion($this->output),
+            'reasoning_tokens' => self::perMillion($this->reasoning),
+        ];
+    }
+
+    private static function perMillion(Money $perToken): string
+    {
+        return Usd::format($perToken->multiply(self::TOKENS_PER_RATE_UNIT));
+    }
+
+    /**
      * @param  array<string, mixed>  $rates
      */
     private static function perToken(array $rates, string $key): Money

@@ -2,8 +2,16 @@
 
 namespace App\Providers;
 
+use App\Billing\Billing;
 use App\Billing\Markup;
+use App\Billing\NoBalanceBilling;
+use App\Billing\Quoter;
+use App\Generations\GenerationDispatcher;
+use App\Generations\GenerationLifecycle;
+use App\Generations\GenerationSubmitter;
+use App\Pixelforge\CachedPricing;
 use App\Pixelforge\Limits;
+use App\Pixelforge\PixelforgeClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +28,26 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(Limits::class, fn () => new Limits(
             config('pixelforge.limits.max_prompt_characters'),
             config('pixelforge.limits.max_reference_images'),
+        ));
+        $this->app->singleton(PixelforgeClient::class, fn () => new PixelforgeClient(
+            (string) config('pixelforge.base_url'),
+            (string) config('pixelforge.api_key'),
+        ));
+        $this->app->singleton(CachedPricing::class, fn ($app) => new CachedPricing(
+            $app->make(PixelforgeClient::class),
+            config('pixelforge.pricing_fresh_seconds'),
+            config('pixelforge.pricing_stale_seconds'),
+        ));
+        $this->app->singleton(Billing::class, NoBalanceBilling::class);
+        $this->app->singleton(GenerationDispatcher::class, fn ($app) => new GenerationDispatcher(
+            $app->make(PixelforgeClient::class),
+            $app->make(GenerationLifecycle::class),
+            config('pixelforge.max_concurrent_generations'),
+        ));
+        $this->app->singleton(GenerationSubmitter::class, fn ($app) => new GenerationSubmitter(
+            $app->make(Quoter::class),
+            $app->make(Billing::class),
+            config('pixelforge.max_unfinished_generations_per_user'),
         ));
         $this->app->singleton(Markup::class, fn () => new Markup(config('billing.markup_percent')));
     }

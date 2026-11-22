@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Pixelforge\ProviderGeneration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -19,4 +20,26 @@ function pixelforgeFixture(string $name): array
         true,
         flags: JSON_THROW_ON_ERROR,
     );
+}
+
+/**
+ * A recorded Pixelforge error as [body, status, headers] for Http::response(...).
+ *
+ * @return array{0: array<string, mixed>, 1: int, 2: array<string, string>}
+ */
+function pixelforgeErrorResponse(string $code): array
+{
+    $error = pixelforgeFixture('errors')[$code];
+
+    return [$error['body'], $error['status'], array_filter(['Retry-After' => $error['retry_after']])];
+}
+
+/**
+ * A generation as Pixelforge reports it, built from a recorded response with some fields replaced.
+ *
+ * @param  array<string, mixed>  $overrides
+ */
+function providerSnapshot(string $fixture, array $overrides = []): ProviderGeneration
+{
+    return ProviderGeneration::fromArray(array_replace(pixelforgeFixture($fixture), $overrides));
 }

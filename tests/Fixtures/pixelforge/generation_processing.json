@@ -1,0 +1,25 @@
+{
+  "id": "gen_01M80VTQ32794C2GD648HPJCTW",
+  "object": "generation",
+  "status": "processing",
+  "prompt": "a red cube on a blue table, studio light",
+  "size": "1024x1024",
+  "quality": "low",
+  "reference_images": [],
+  "metadata": {
+    "our_id": "probe-1"
+  },
+  "image_url": null,
+  "image_url_expires_at": null,
+  "usage": null,
+  "rates": {
+    "input_text_tokens": "5.00",
+    "input_image_tokens": "10.00",
+    "output_tokens": "40.00",
+    "reasoning_tokens": "12.50"
+  },
+  "error": null,
+  "created_at": "2026-11-22T05:31:56Z",
+  "started_at": "2026-11-22T05:32:00Z",
+  "completed_at": null
+}

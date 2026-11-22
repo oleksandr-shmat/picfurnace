@@ -40,12 +40,31 @@ final readonly class Pricing
 
         return new self(
             Rates::fromArray(self::section($payload, 'rates')),
-            self::nonNegativeInt($tokens['characters_per_text_token'] ?? null, 'characters_per_text_token'),
+            Payload::nonNegativeInt($tokens['characters_per_text_token'] ?? null, 'characters_per_text_token'),
             self::percent($tokens['text_token_variance'] ?? null),
-            self::nonNegativeInt($tokens['per_reference_image'] ?? null, 'per_reference_image'),
+            Payload::nonNegativeInt($tokens['per_reference_image'] ?? null, 'per_reference_image'),
             self::outputTokensByQualityAndSize(self::section($tokens, 'output')),
             self::reasoningRangesByQuality(self::section($tokens, 'reasoning')),
         );
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function qualities(): array
+    {
+        return array_keys($this->outputTokens);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function sizes(): array
+    {
+        // Every quality is offered in the same sizes.
+        $firstQuality = $this->qualities()[0];
+
+        return array_keys($this->outputTokens[$firstQuality]);
     }
 
     public function outputTokens(string $quality, string $size): int
@@ -72,8 +91,8 @@ final readonly class Pricing
         $result = [];
 
         foreach ($output as $quality => $sizes) {
-            foreach (self::nonEmptyArray($sizes, "output.{$quality}") as $size => $count) {
-                $result[$quality][$size] = self::nonNegativeInt($count, "output.{$quality}.{$size}");
+            foreach (Payload::nonEmptyArray($sizes, "output.{$quality}") as $size => $count) {
+                $result[$quality][$size] = Payload::nonNegativeInt($count, "output.{$quality}.{$size}");
             }
         }
 
@@ -89,11 +108,11 @@ final readonly class Pricing
         $result = [];
 
         foreach ($reasoning as $quality => $range) {
-            $range = self::nonEmptyArray($range, "reasoning.{$quality}");
+            $range = Payload::nonEmptyArray($range, "reasoning.{$quality}");
 
             $result[$quality] = [
-                self::nonNegativeInt($range['min'] ?? null, "reasoning.{$quality}.min"),
-                self::nonNegativeInt($range['max'] ?? null, "reasoning.{$quality}.max"),
+                Payload::nonNegativeInt($range['min'] ?? null, "reasoning.{$quality}.min"),
+                Payload::nonNegativeInt($range['max'] ?? null, "reasoning.{$quality}.max"),
             ];
         }
 
@@ -106,28 +125,7 @@ final readonly class Pricing
      */
     private static function section(array $payload, string $key): array
     {
-        return self::nonEmptyArray($payload[$key] ?? null, $key);
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    private static function nonEmptyArray(mixed $value, string $name): array
-    {
-        if (! is_array($value) || $value === []) {
-            throw new InvalidArgumentException("Pricing payload is missing [{$name}].");
-        }
-
-        return $value;
-    }
-
-    private static function nonNegativeInt(mixed $value, string $name): int
-    {
-        if (! is_int($value) || $value < 0) {
-            throw new InvalidArgumentException("Pricing payload has an invalid [{$name}].");
-        }
-
-        return $value;
+        return Payload::nonEmptyArray($payload[$key] ?? null, $key);
     }
 
     /**

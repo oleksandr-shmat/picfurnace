@@ -1,0 +1,74 @@
+{
+  "idempotency_key_reused": {
+    "status": 409,
+    "retry_after": null,
+    "body": {
+      "error": {
+        "type": "idempotency_error",
+        "code": "idempotency_key_reused",
+        "message": "This Idempotency-Key was already used with different request parameters."
+      }
+    }
+  },
+  "rate_limit_exceeded": {
+    "status": 429,
+    "retry_after": "19",
+    "body": {
+      "error": {
+        "type": "rate_limit_error",
+        "code": "rate_limit_exceeded",
+        "message": "Too many requests. Slow down and retry after the number of seconds in the Retry-After header."
+      }
+    }
+  },
+  "concurrency_limit_exceeded": {
+    "status": 429,
+    "retry_after": "5",
+    "body": {
+      "error": {
+        "type": "rate_limit_error",
+        "code": "concurrency_limit_exceeded",
+        "message": "You already have 3 generations queued or processing. Wait for one to finish, then retry."
+      }
+    }
+  },
+  "content_policy_violation": {
+    "status": 400,
+    "retry_after": null,
+    "body": {
+      "error": {
+        "type": "invalid_request_error",
+        "code": "content_policy_violation",
+        "message": "Your prompt was rejected by our content policy. You were not charged."
+      }
+    }
+  },
+  "overloaded": {
+    "status": 503,
+    "retry_after": "2",
+    "body": {
+      "error": {
+        "type": "api_error",
+        "code": "overloaded",
+        "message": "Pixelforge is temporarily overloaded. Nothing was created; please retry shortly."
+      }
+    }
+  },
+  "validation_failed": {
+    "status": 422,
+    "retry_after": null,
+    "body": {
+      "error": {
+        "type": "invalid_request_error",
+        "code": "validation_failed",
+        "message": "The prompt field is required.",
+        "param": "prompt",
+        "errors": {
+          "prompt": [
+            "The prompt field is required."
+          ]
+        }
+      }
+    }
+  }
+}
