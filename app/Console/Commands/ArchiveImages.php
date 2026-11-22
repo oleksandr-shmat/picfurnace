@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Generations\ImageArchive;
-use App\Generations\ImageDownloadFailed;
+use App\Generations\Images\ImageArchive;
+use App\Generations\Images\ImageDownloadFailed;
 use Illuminate\Console\Command;
 
 class ArchiveImages extends Command

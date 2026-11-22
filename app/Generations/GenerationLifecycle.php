@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace App\Generations;
 
 use App\Billing\Billing;
-use App\Billing\CostCalculator;
-use App\Billing\Markup;
 use App\Enums\GenerationStatus;
 use App\Models\Generation;
 use App\Money\Usd;
-use App\Pixelforge\ProviderGeneration;
+use App\Pixelforge\Api\ProviderGeneration;
+use App\Quoting\Markup;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use LogicException;
@@ -27,11 +26,13 @@ final class GenerationLifecycle
     public const string CANCELLED_BY_USER = 'cancelled_by_user';
 
     public function __construct(
-        private readonly CostCalculator $calculator,
         private readonly Billing $billing,
     ) {}
 
-    public function applyProviderSnapshot(Generation $generation, ProviderGeneration $snapshot): SnapshotOutcome
+    /**
+     * Returns true if the report changed the generation, false if it was older than what we know.
+     */
+    public function applyProviderSnapshot(Generation $generation, ProviderGeneration $snapshot): bool
     {
         return DB::transaction(function () use ($generation, $snapshot) {
             $current = $this->lock($generation);
@@ -40,7 +41,7 @@ final class GenerationLifecycle
             if (! $current->status->canMoveTo($next)) {
                 $this->warnIfProviderSucceededWhatWeFailed($current, $next);
 
-                return SnapshotOutcome::IgnoredStale;
+                return false;
             }
 
             if ($current->provider_id !== null && $current->provider_id !== $snapshot->id) {
@@ -58,7 +59,7 @@ final class GenerationLifecycle
                 default => $current->save(),
             };
 
-            return SnapshotOutcome::Applied;
+            return true;
         });
     }
 
@@ -125,7 +126,7 @@ final class GenerationLifecycle
     private function recordSuccess(Generation $generation, ProviderGeneration $snapshot): void
     {
         // A succeeded snapshot always carries usage and an image: ProviderGeneration refuses it otherwise.
-        $providerCost = $this->calculator->cost($snapshot->usage, $snapshot->rates);
+        $providerCost = $snapshot->rates->costOf($snapshot->usage);
         $price = (new Markup($generation->markup_percent))->apply($providerCost);
 
         $generation->usage = $snapshot->usage->toArray();

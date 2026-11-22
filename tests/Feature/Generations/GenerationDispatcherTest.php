@@ -7,7 +7,7 @@ use App\Generations\GenerationDispatcher;
 use App\Generations\GenerationLifecycle;
 use App\Models\Generation;
 use App\Models\User;
-use App\Pixelforge\UnexpectedResponse;
+use App\Pixelforge\Client\UnexpectedResponse;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory;

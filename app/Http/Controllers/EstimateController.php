@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Billing\Quoter;
 use App\Http\Requests\Generations\EstimateGenerationRequest;
 use App\Money\Usd;
+use App\Quoting\Quoter;
 use Illuminate\Http\JsonResponse;
 
 class EstimateController extends Controller

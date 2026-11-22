@@ -5,7 +5,6 @@ declare(strict_types=1);
 use App\Billing\Billing;
 use App\Enums\GenerationStatus;
 use App\Generations\GenerationLifecycle;
-use App\Generations\SnapshotOutcome;
 use App\Models\Generation;
 use App\Money\Usd;
 use Illuminate\Support\Facades\Log;
@@ -29,10 +28,10 @@ beforeEach(function () {
 it('records the provider accepting a generation', function () {
     $generation = Generation::factory()->create(['claimed_at' => now()]);
 
-    $outcome = $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot('generation_queued', ['id' => 'gen_1']));
+    $applied = $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot('generation_queued', ['id' => 'gen_1']));
 
     $generation->refresh();
-    expect($outcome)->toBe(SnapshotOutcome::Applied)
+    expect($applied)->toBeTrue()
         ->and($generation->status)->toBe(GenerationStatus::Queued)
         ->and($generation->provider_id)->toBe('gen_1')
         ->and($generation->rates['output_tokens'])->toBe('40.000000000')
@@ -94,8 +93,8 @@ it('charges a success only once, however often it is reported', function () {
     $first = $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot('generation_succeeded'));
     $second = $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot('generation_succeeded'));
 
-    expect($first)->toBe(SnapshotOutcome::Applied)
-        ->and($second)->toBe(SnapshotOutcome::IgnoredStale)
+    expect($first)->toBeTrue()
+        ->and($second)->toBeFalse()
         ->and($generation->refresh()->charged_nano)->toBe(17_287_500);
 });
 
@@ -103,9 +102,9 @@ it('ignores an older report that arrives after the result', function (string $la
     $generation = Generation::factory()->create(['claimed_at' => now()]);
     $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot('generation_succeeded', ['id' => 'gen_1']));
 
-    $outcome = $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot($late, ['id' => 'gen_1']));
+    $applied = $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot($late, ['id' => 'gen_1']));
 
-    expect($outcome)->toBe(SnapshotOutcome::IgnoredStale)
+    expect($applied)->toBeFalse()
         ->and($generation->refresh()->status)->toBe(GenerationStatus::Succeeded)
         ->and($generation->charged_nano)->toBe(17_287_500);
 })->with(['generation_processing', 'generation_queued']);

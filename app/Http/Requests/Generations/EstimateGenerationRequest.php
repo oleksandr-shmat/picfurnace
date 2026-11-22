@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Generations;
 
-use App\Pixelforge\CachedPricing;
-use App\Pixelforge\Limits;
+use App\Pixelforge\Api\Limits;
+use App\Pixelforge\Client\CachedPricing;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

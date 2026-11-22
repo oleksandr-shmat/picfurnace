@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-use App\Pixelforge\CachedPricing;
-use App\Pixelforge\RetryLater;
+use App\Pixelforge\Client\CachedPricing;
+use App\Pixelforge\Client\RetryLater;
 use Illuminate\Support\Defer\DeferredCallbackCollection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;

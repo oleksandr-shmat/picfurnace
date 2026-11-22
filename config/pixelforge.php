@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Pixelforge\Api\Limits;
+
 return [
 
     'base_url' => env('PIXELFORGE_BASE_URL', 'https://pixelforge.promptedit.dev/v1'),

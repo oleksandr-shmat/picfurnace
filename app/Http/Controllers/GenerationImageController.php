@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Generations\ImageArchive;
+use App\Generations\Images\ImageArchive;
 use App\Models\Generation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;

@@ -6,10 +6,10 @@ namespace App\Generations;
 
 use App\Enums\GenerationStatus;
 use App\Models\Generation;
-use App\Pixelforge\PixelforgeClient;
-use App\Pixelforge\RequestRejected;
-use App\Pixelforge\RetryLater;
-use App\Pixelforge\UnexpectedResponse;
+use App\Pixelforge\Client\PixelforgeClient;
+use App\Pixelforge\Client\RequestRejected;
+use App\Pixelforge\Client\RetryLater;
+use App\Pixelforge\Client\UnexpectedResponse;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -77,6 +77,7 @@ final class GenerationDispatcher
         return Generation::query()
             ->where('status', GenerationStatus::Pending)
             ->where(fn ($query) => $query->whereNull('next_attempt_at')->orWhere('next_attempt_at', '<=', now()))
+            // A user whose generation is already active at Pixelforge waits for it to finish.
             ->whereNotExists(
                 fn ($query) => $query->from('generations as active')
                     ->whereColumn('active.user_id', 'generations.user_id')

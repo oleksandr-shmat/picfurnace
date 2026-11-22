@@ -3,17 +3,17 @@
 namespace App\Providers;
 
 use App\Billing\Billing;
-use App\Billing\Markup;
 use App\Billing\NoBalanceBilling;
-use App\Billing\Quoter;
 use App\Generations\GenerationDispatcher;
 use App\Generations\GenerationLifecycle;
 use App\Generations\GenerationSubmitter;
-use App\Generations\ImageArchive;
-use App\Pixelforge\CachedPricing;
-use App\Pixelforge\Limits;
-use App\Pixelforge\PixelforgeClient;
-use App\Pixelforge\WebhookSignature;
+use App\Generations\Images\ImageArchive;
+use App\Pixelforge\Api\Limits;
+use App\Pixelforge\Client\CachedPricing;
+use App\Pixelforge\Client\PixelforgeClient;
+use App\Pixelforge\Webhook\WebhookSignature;
+use App\Quoting\Markup;
+use App\Quoting\Quoter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;

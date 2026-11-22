@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 use App\Billing\Billing;
 use App\Billing\InsufficientBalance;
-use App\Billing\Quoter;
 use App\Enums\GenerationStatus;
 use App\Generations\GenerationSubmitter;
 use App\Models\Generation;
 use App\Models\User;
-use App\Pixelforge\CachedPricing;
+use App\Pixelforge\Client\CachedPricing;
+use App\Quoting\Quoter;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;

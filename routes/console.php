@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 Schedule::command('generations:dispatch')->everyFiveSeconds()->withoutOverlapping();
 
 Schedule::command('generations:archive-images')->everyMinute()->withoutOverlapping();
+
+Schedule::command('generations:reconcile')->everyMinute()->withoutOverlapping();

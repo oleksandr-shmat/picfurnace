@@ -3,12 +3,12 @@
 declare(strict_types=1);
 
 use App\Models\Generation;
-use App\Pixelforge\PixelforgeClient;
-use App\Pixelforge\ProviderGeneration;
-use App\Pixelforge\ProviderStatus;
-use App\Pixelforge\RequestRejected;
-use App\Pixelforge\RetryLater;
-use App\Pixelforge\UnexpectedResponse;
+use App\Pixelforge\Api\ProviderGeneration;
+use App\Pixelforge\Api\ProviderStatus;
+use App\Pixelforge\Client\PixelforgeClient;
+use App\Pixelforge\Client\RequestRejected;
+use App\Pixelforge\Client\RetryLater;
+use App\Pixelforge\Client\UnexpectedResponse;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;

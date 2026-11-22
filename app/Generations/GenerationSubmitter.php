@@ -6,11 +6,11 @@ namespace App\Generations;
 
 use App\Billing\Billing;
 use App\Billing\InsufficientBalance;
-use App\Billing\Quoter;
 use App\Enums\GenerationStatus;
 use App\Models\Generation;
 use App\Models\User;
 use App\Money\Usd;
+use App\Quoting\Quoter;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 

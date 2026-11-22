@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Generations\WebhookEventHandler;
-use App\Pixelforge\ProviderEvent;
-use App\Pixelforge\WebhookSignature;
+use App\Generations\Webhooks\WebhookEventHandler;
+use App\Pixelforge\Webhook\ProviderEvent;
+use App\Pixelforge\Webhook\WebhookSignature;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use InvalidArgumentException;

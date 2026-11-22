@@ -3,10 +3,10 @@
 declare(strict_types=1);
 
 use App\Billing\Billing;
-use App\Billing\Markup;
 use App\Billing\NoBalanceBilling;
-use App\Pixelforge\Limits;
-use App\Pixelforge\PixelforgeClient;
+use App\Pixelforge\Api\Limits;
+use App\Pixelforge\Client\PixelforgeClient;
+use App\Quoting\Markup;
 
 it('takes the markup percent from config', function () {
     config(['billing.markup_percent' => 40]);
