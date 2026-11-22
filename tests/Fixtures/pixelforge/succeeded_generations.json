@@ -1,0 +1,254 @@
+[
+  {
+    "id": "gen_01M80VTQ32794C2GD648HPJCTW",
+    "prompt_chars": 40,
+    "size": "1024x1024",
+    "quality": "low",
+    "reference_images": 0,
+    "usage": {
+      "input_text_tokens": 11,
+      "input_image_tokens": 0,
+      "output_tokens": 280,
+      "reasoning_tokens": 206,
+      "total_tokens": 497
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 13830000
+  },
+  {
+    "id": "gen_01M80W0VEMWJ73076FGX8J6AAX",
+    "prompt_chars": 51,
+    "size": "1024x1024",
+    "quality": "low",
+    "reference_images": 0,
+    "usage": {
+      "input_text_tokens": 14,
+      "input_image_tokens": 0,
+      "output_tokens": 280,
+      "reasoning_tokens": 464,
+      "total_tokens": 758
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 17070000
+  },
+  {
+    "id": "gen_01M80W0VFPV71PFBPYS97VRJV0",
+    "prompt_chars": 51,
+    "size": "1536x1024",
+    "quality": "low",
+    "reference_images": 0,
+    "usage": {
+      "input_text_tokens": 13,
+      "input_image_tokens": 0,
+      "output_tokens": 420,
+      "reasoning_tokens": 178,
+      "total_tokens": 611
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 19090000
+  },
+  {
+    "id": "gen_01M80W0VGT1VXD0JGQZVMX3BZR",
+    "prompt_chars": 51,
+    "size": "1024x1536",
+    "quality": "low",
+    "reference_images": 0,
+    "usage": {
+      "input_text_tokens": 13,
+      "input_image_tokens": 0,
+      "output_tokens": 420,
+      "reasoning_tokens": 51,
+      "total_tokens": 484
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 17502500
+  },
+  {
+    "id": "gen_01M80W13REP0DK8DMEA5119K28",
+    "prompt_chars": 54,
+    "size": "1024x1024",
+    "quality": "medium",
+    "reference_images": 1,
+    "usage": {
+      "input_text_tokens": 13,
+      "input_image_tokens": 765,
+      "output_tokens": 1100,
+      "reasoning_tokens": 463,
+      "total_tokens": 2341
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 57502500
+  },
+  {
+    "id": "gen_01M80W18FTMJYMJ88X7X2CPQAN",
+    "prompt_chars": 54,
+    "size": "1536x1024",
+    "quality": "medium",
+    "reference_images": 1,
+    "usage": {
+      "input_text_tokens": 12,
+      "input_image_tokens": 765,
+      "output_tokens": 1650,
+      "reasoning_tokens": 201,
+      "total_tokens": 2628
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 76222500
+  },
+  {
+    "id": "gen_01M80W1E9H4DGSE12WK05QH4W9",
+    "prompt_chars": 54,
+    "size": "1024x1536",
+    "quality": "medium",
+    "reference_images": 1,
+    "usage": {
+      "input_text_tokens": 12,
+      "input_image_tokens": 765,
+      "output_tokens": 1650,
+      "reasoning_tokens": 747,
+      "total_tokens": 3174
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 83047500
+  },
+  {
+    "id": "gen_01M80W1K11025HHP1ZCHEVM7FJ",
+    "prompt_chars": 52,
+    "size": "1024x1024",
+    "quality": "high",
+    "reference_images": 2,
+    "usage": {
+      "input_text_tokens": 14,
+      "input_image_tokens": 1530,
+      "output_tokens": 4300,
+      "reasoning_tokens": 5581,
+      "total_tokens": 11425
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 257132500
+  },
+  {
+    "id": "gen_01M80W1MB3TCXR64KSVF6Y2FWR",
+    "prompt_chars": 52,
+    "size": "1536x1024",
+    "quality": "high",
+    "reference_images": 2,
+    "usage": {
+      "input_text_tokens": 14,
+      "input_image_tokens": 1530,
+      "output_tokens": 6450,
+      "reasoning_tokens": 7384,
+      "total_tokens": 15378
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 365670000
+  },
+  {
+    "id": "gen_01M80W1S1RB368Z1PZ2DQ0PV4N",
+    "prompt_chars": 52,
+    "size": "1024x1536",
+    "quality": "high",
+    "reference_images": 2,
+    "usage": {
+      "input_text_tokens": 13,
+      "input_image_tokens": 1530,
+      "output_tokens": 6450,
+      "reasoning_tokens": 6652,
+      "total_tokens": 14645
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 356515000
+  },
+  {
+    "id": "gen_01M80W3KMM5J46Z5M4D58ERFSD",
+    "prompt_chars": 39,
+    "size": "1024x1024",
+    "quality": "low",
+    "reference_images": 0,
+    "usage": {
+      "input_text_tokens": 9,
+      "input_image_tokens": 0,
+      "output_tokens": 280,
+      "reasoning_tokens": 436,
+      "total_tokens": 725
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 16695000
+  },
+  {
+    "id": "gen_01M80W3M2W6XV9QSDZYE41TWZW",
+    "prompt_chars": 26,
+    "size": "1024x1024",
+    "quality": "low",
+    "reference_images": 0,
+    "usage": {
+      "input_text_tokens": 6,
+      "input_image_tokens": 0,
+      "output_tokens": 280,
+      "reasoning_tokens": 480,
+      "total_tokens": 766
+    },
+    "rates": {
+      "input_text_tokens": "5.00",
+      "input_image_tokens": "10.00",
+      "output_tokens": "40.00",
+      "reasoning_tokens": "12.50"
+    },
+    "cost_nano": 17230000
+  }
+]
