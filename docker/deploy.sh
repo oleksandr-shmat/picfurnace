@@ -1,14 +1,11 @@
 #!/bin/sh
-# Deploys one commit on the server. Run it from the checkout of the repository on the server:
-#   docker/deploy.sh <commit sha>
+# Builds and starts what is checked out in the repository on the server. The workflow first
+# updates the checkout (git fetch, git reset --hard <sha>), so this script is always the new one.
 set -e
 
 cd "$(dirname "$0")/.."
 
 compose="docker compose -f compose.prod.yml"
-
-git fetch --quiet origin main
-git reset --hard "$1"
 
 $compose build
 

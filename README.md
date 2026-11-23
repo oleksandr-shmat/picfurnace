@@ -143,9 +143,9 @@ Images are copied to a Docker volume (the disk of the server), so no object stor
 2. Create `.env` next to `compose.prod.yml` (it is never committed) with `APP_DOMAIN`, `APP_URL`, `APP_KEY`, `DB_PASSWORD`, `PIXELFORGE_API_KEY`, `PIXELFORGE_WEBHOOK_SECRET`, `DEMO_USER_PASSWORD`, `ADMIN_PASSWORD` (the seeder refuses to run in production without the passwords) and `QUEUE_CONNECTION=database`, `SESSION_DRIVER=database`, `CACHE_STORE=database`.
 3. Point a DNS `A` record of `APP_DOMAIN` to the server. Caddy asks for the certificate when the first request arrives.
 4. Create a Pixelforge key for this environment and set its webhook URL to `https://<APP_DOMAIN>/webhooks/pixelforge`.
-5. `docker/deploy.sh <commit>` builds the image, migrates, seeds (safe to run again) and restarts the services.
+5. `docker/deploy.sh` builds the image, migrates, seeds (safe to run again) and restarts the services.
 
-**Every later deploy** is done by the `deploy` job of the workflow: after every check of the commit has passed it runs `docker/deploy.sh <sha>` on the server over SSH. It needs the repository secrets `DEPLOY_HOST`, `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`, and does nothing without them.
+**Every later deploy** is done by the `deploy` job of the workflow: after every check of the commit has passed it checks out that commit on the server over SSH and runs `docker/deploy.sh`. It needs the repository secrets `DEPLOY_HOST`, `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`, and does nothing without them.
 
 **Trade-offs.** The image is built on the server, so there is no registry to manage, at the price of a slower deploy and a build that needs swap on a 2 GB machine. A deploy restarts the containers, so for a few seconds the site is not available: this is accepted for a single small server. The database is not replicated; a backup is a `pg_dump` run by cron on the server.
 

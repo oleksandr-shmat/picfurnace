@@ -103,4 +103,4 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           echo "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes "deploy@$DEPLOY_HOST" \
-            "sh /home/deploy/picfurnace/docker/deploy.sh ${{ github.sha }}"
+            "cd /home/deploy/picfurnace && git fetch --quiet origin main && git reset --hard ${{ github.sha }} && sh docker/deploy.sh"
