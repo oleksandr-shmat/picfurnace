@@ -1,0 +1,11 @@
+{
+	frankenphp
+}
+
+# APP_DOMAIN comes from the environment (the .env file next to compose.prod.yml).
+# Caddy gets and renews the HTTPS certificate for it by itself.
+{$APP_DOMAIN} {
+	root * /app/public
+	encode zstd gzip
+	php_server
+}

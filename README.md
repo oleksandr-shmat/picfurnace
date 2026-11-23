@@ -4,7 +4,7 @@ A small product on top of **Pixelforge**, an asynchronous image-generation API. 
 
 Laravel 13, Vue 3, Inertia 3, PostgreSQL. The price a user pays is the Pixelforge cost plus a markup (25% by default). A generation that fails is free.
 
-- **Deployed:** _URL to be added_
+- **Deployed:** https://picfurnace.aleksthegreat.dev
 - **Demo account:** `demo@example.com`, password in the submission e-mail (locally `password`)
 - **Admin account:** `admin@example.com` (only used by the optional parts, see [Roadmap](#roadmap))
 
@@ -124,18 +124,30 @@ app/
 
 **Not covered, said plainly:** there are no browser tests (the frontend has unit tests for its plain logic, lint and types, plus manual checks); concurrency is covered by two targeted tests, not a general harness; Pixelforge itself was checked by hand against the live API; PCOV has no branch coverage.
 
-## Deploying (Laravel Cloud)
+## Deploying
 
-The app runs on Laravel Cloud: PHP 8.5, serverless PostgreSQL, an object-storage bucket.
+It runs on one small server (a DigitalOcean droplet, 1 vCPU / 2 GB) with Docker Compose (`compose.prod.yml`). One image (`Dockerfile`) is used for every role:
 
-- **Build commands:** `composer install --no-dev`, `npm ci --audit false`, `npm run build`, `php artisan optimize`
-- **Deploy commands:** `php artisan migrate --force`, then `php artisan db:seed --force` (the seeder is safe to run again)
-- **Scheduler:** enable the Scheduler toggle (runs `schedule:run` every minute).
-- **Queue worker:** one worker for the default queue (`QUEUE_CONNECTION=database`), so a generation is sent right after it is submitted. Without it the scheduler still sends it within a minute.
-- **Bucket:** attach it as the default disk. Cloud then sets `FILESYSTEM_DISK` and the `AWS_*` variables, and image copies go there (the local disk of Cloud is ephemeral).
-- **Environment variables:** `APP_ENV=production`, `APP_KEY`, `APP_URL`, `PIXELFORGE_API_KEY`, `PIXELFORGE_WEBHOOK_SECRET`, `DEMO_USER_PASSWORD`, `ADMIN_PASSWORD` (the seeder refuses to run in production without the passwords).
-- **Pixelforge key:** create a key for this environment and set its webhook URL to `https://<app>/webhooks/pixelforge`.
-- **Deploy hook:** with the hook enabled and its URL in the repository secret `LARAVEL_CLOUD_DEPLOY_HOOK`, the `deploy` job of the workflow triggers a deploy only after every check of the same commit has passed.
+| Service     | What it does                                                                         |
+| ----------- | ------------------------------------------------------------------------------------ |
+| `web`       | FrankenPHP (Caddy and PHP in one process); gets and renews the HTTPS certificate      |
+| `worker`    | `queue:work`: sends a generation right after it is submitted                          |
+| `scheduler` | `schedule:work`: the watchdog of the dispatcher, reconciliation, image copies         |
+| `db`        | PostgreSQL 17 on a Docker volume                                                      |
+
+Images are copied to a Docker volume (the disk of the server), so no object storage is needed.
+
+**First setup on the server**
+
+1. Install Docker, open ports 22, 80 and 443, clone the repository to `/home/deploy/picfurnace`.
+2. Create `.env` next to `compose.prod.yml` (it is never committed) with `APP_DOMAIN`, `APP_URL`, `APP_KEY`, `DB_PASSWORD`, `PIXELFORGE_API_KEY`, `PIXELFORGE_WEBHOOK_SECRET`, `DEMO_USER_PASSWORD`, `ADMIN_PASSWORD` (the seeder refuses to run in production without the passwords) and `QUEUE_CONNECTION=database`, `SESSION_DRIVER=database`, `CACHE_STORE=database`.
+3. Point a DNS `A` record of `APP_DOMAIN` to the server. Caddy asks for the certificate when the first request arrives.
+4. Create a Pixelforge key for this environment and set its webhook URL to `https://<APP_DOMAIN>/webhooks/pixelforge`.
+5. `docker/deploy.sh <commit>` builds the image, migrates, seeds (safe to run again) and restarts the services.
+
+**Every later deploy** is done by the `deploy` job of the workflow: after every check of the commit has passed it runs `docker/deploy.sh <sha>` on the server over SSH. It needs the repository secrets `DEPLOY_HOST`, `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`, and does nothing without them.
+
+**Trade-offs.** The image is built on the server, so there is no registry to manage, at the price of a slower deploy and a build that needs swap on a 2 GB machine. A deploy restarts the containers, so for a few seconds the site is not available: this is accepted for a single small server. The database is not replicated; a backup is a `pg_dump` run by cron on the server.
 
 ## Roadmap
 

@@ -1,0 +1,69 @@
+# Production stack for one server. Run it from the directory that holds the .env file of the server:
+#   docker compose -f compose.prod.yml up -d --build
+#
+# The .env file (never committed) provides APP_DOMAIN, DB_PASSWORD and all the settings of the app.
+
+x-app: &app
+    image: picfurnace-app
+    restart: unless-stopped
+    env_file: .env
+    environment:
+        APP_ENV: production
+        APP_DEBUG: "false"
+        DB_HOST: db
+        DB_PORT: 5432
+        DB_DATABASE: pixelforge
+        DB_USERNAME: pixelforge
+        LOG_CHANNEL: stderr
+    volumes:
+        - storage:/app/storage
+    depends_on:
+        db:
+            condition: service_healthy
+
+services:
+    web:
+        <<: *app
+        build: .
+        ports:
+            - "80:80"
+            - "443:443"
+            - "443:443/udp"
+        volumes:
+            - storage:/app/storage
+            - caddy_data:/data
+            - caddy_config:/config
+
+    worker:
+        <<: *app
+        command: ["php", "artisan", "queue:work", "--sleep=1", "--tries=3", "--max-time=3600"]
+        # The healthcheck of the base image asks the web server, which these roles do not run.
+        healthcheck:
+            disable: true
+
+    scheduler:
+        <<: *app
+        command: ["php", "artisan", "schedule:work"]
+        healthcheck:
+            disable: true
+
+    db:
+        image: postgres:17
+        restart: unless-stopped
+        environment:
+            POSTGRES_DB: pixelforge
+            POSTGRES_USER: pixelforge
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pgdata:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U pixelforge -d pixelforge"]
+            interval: 5s
+            timeout: 3s
+            retries: 10
+
+volumes:
+    storage:
+    pgdata:
+    caddy_data:
+    caddy_config:
