@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Billing\Billing;
 use App\Billing\InsufficientBalance;
 use App\Enums\GenerationStatus;
+use App\Generations\DispatchGenerationsJob;
 use App\Generations\GenerationSubmitter;
 use App\Http\Controllers\EstimateController;
 use App\Http\Requests\Generations\EstimateGenerationRequest;
@@ -16,6 +17,7 @@ use App\Quoting\Quoter;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 
 mutates(
     GenerationSubmitter::class,
@@ -61,6 +63,26 @@ it('puts a generation in our queue with the price the user was shown', function 
         ->and($generation->claimed_at)->toBeNull()
         ->and($generation->uuid)->toBeUuid();
 });
+
+it('starts sending the generation at once instead of waiting for the scheduler', function () {
+    Queue::fake();
+
+    $this->actingAs($this->user)->post(route('generations.store'), validGeneration());
+
+    Queue::assertPushed(DispatchGenerationsJob::class, 1);
+});
+
+it('queues nothing when nothing was saved', function (array $overrides) {
+    Queue::fake();
+    Generation::factory()->count(5)->create(['user_id' => $this->user->id]);
+
+    $this->actingAs($this->user)->post(route('generations.store'), validGeneration($overrides));
+
+    Queue::assertNothingPushed();
+})->with([
+    'too many waiting' => [[]],
+    'invalid form' => [['prompt' => '']],
+]);
 
 it('does not talk to Pixelforge except for the pricing', function () {
     $this->actingAs($this->user)->post(route('generations.store'), validGeneration());

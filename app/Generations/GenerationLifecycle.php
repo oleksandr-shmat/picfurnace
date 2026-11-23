@@ -59,6 +59,11 @@ final class GenerationLifecycle
                 default => $current->save(),
             };
 
+            // A finished generation frees a slot at Pixelforge: let the next waiting one start now.
+            if ($next->isTerminal()) {
+                DispatchGenerationsJob::dispatch()->afterCommit();
+            }
+
             return true;
         });
     }

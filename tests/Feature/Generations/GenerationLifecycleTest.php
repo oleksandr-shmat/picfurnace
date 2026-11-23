@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 use App\Billing\Billing;
 use App\Enums\GenerationStatus;
+use App\Generations\DispatchGenerationsJob;
 use App\Generations\GenerationLifecycle;
 use App\Models\Generation;
 use App\Money\Usd;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Queue;
 use Money\Money;
 
 mutates(GenerationLifecycle::class);
@@ -37,6 +39,30 @@ it('records the provider accepting a generation', function () {
         ->and($generation->rates['output_tokens'])->toBe('40.000000000')
         ->and($generation->submitted_at)->not->toBeNull()
         ->and($generation->charged_nano)->toBeNull();
+});
+
+it('lets the next waiting generation start as soon as one finishes, and not before', function (string $fixture, int $pushed) {
+    Queue::fake();
+    $generation = Generation::factory()->create(['claimed_at' => now()]);
+
+    $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot($fixture, ['id' => 'gen_1']));
+
+    Queue::assertPushed(DispatchGenerationsJob::class, $pushed);
+})->with([
+    'a success frees a slot' => ['generation_succeeded', 1],
+    'a failure frees a slot' => ['generation_failed', 1],
+    'processing does not' => ['generation_processing', 0],
+    'queued does not' => ['generation_queued', 0],
+]);
+
+it('does not start anything for a report it ignored', function () {
+    $generation = Generation::factory()->create(['claimed_at' => now()]);
+    $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot('generation_succeeded', ['id' => 'gen_1']));
+    Queue::fake();
+
+    $this->lifecycle->applyProviderSnapshot($generation, providerSnapshot('generation_succeeded', ['id' => 'gen_1']));
+
+    Queue::assertNothingPushed();
 });
 
 it('keeps the time the provider first accepted the generation', function () {

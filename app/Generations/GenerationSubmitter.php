@@ -36,7 +36,7 @@ final class GenerationSubmitter
     {
         $quote = $this->quoter->quote($prompt, $quality, $size, count($referenceImageUrls));
 
-        return DB::transaction(function () use ($user, $prompt, $quality, $size, $referenceImageUrls, $quote) {
+        $generation = DB::transaction(function () use ($user, $prompt, $quality, $size, $referenceImageUrls, $quote) {
             // Lock the user row, so two simultaneous requests cannot both pass the limit check.
             User::query()->lockForUpdate()->findOrFail($user->id);
 
@@ -71,5 +71,10 @@ final class GenerationSubmitter
 
             return $generation;
         });
+
+        // Saved for good: start sending it now instead of waiting for the scheduler.
+        DispatchGenerationsJob::dispatch();
+
+        return $generation;
     }
 }
