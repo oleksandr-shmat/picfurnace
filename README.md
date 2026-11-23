@@ -147,7 +147,7 @@ Images are copied to a Docker volume (the disk of the server), so no object stor
 
 **Every later deploy** is done by the `deploy` job of the workflow: after every check of the commit has passed it checks out that commit on the server over SSH and runs `docker/deploy.sh`. It needs the repository secrets `DEPLOY_HOST`, `DEPLOY_SSH_KEY` and `DEPLOY_KNOWN_HOSTS`, and does nothing without them.
 
-**Trade-offs.** The image is built on the server, so there is no registry to manage, at the price of a slower deploy and a build that needs swap on a 2 GB machine. A deploy restarts the containers, so for a few seconds the site is not available: this is accepted for a single small server. The database is not replicated; a backup is a `pg_dump` run by cron on the server.
+**Trade-offs.** The image is built on the server, so there is no registry to manage, at the price of a slower deploy and a build that needs swap on a 2 GB machine. A deploy restarts the containers, so for a few seconds the site is not available: this is accepted for a single small server. The database is not replicated; a daily cron job runs `docker/backup.sh` (`pg_dump`, the last 7 dumps are kept), but the dumps lie on the same server, so they protect from a mistake and not from losing the server.
 
 ## Roadmap
 
