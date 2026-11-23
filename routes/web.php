@@ -8,9 +8,10 @@ use Illuminate\Support\Facades\Route;
 Route::inertia('/', 'Welcome')->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'Dashboard')->name('dashboard');
+    Route::get('dashboard', [GenerationController::class, 'index'])->name('dashboard');
 
     Route::post('generations', [GenerationController::class, 'store'])->name('generations.store');
+    Route::delete('generations/{generation:uuid}', [GenerationController::class, 'destroy'])->name('generations.destroy');
     Route::get('generations/{generation:uuid}/image', GenerationImageController::class)->name('generations.image');
     Route::post('generations/estimate', EstimateController::class)->name('generations.estimate');
 });

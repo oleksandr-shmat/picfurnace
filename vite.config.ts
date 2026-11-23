@@ -71,6 +71,8 @@ export default defineConfig({
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
+            // Responses recorded from Pixelforge are kept as they were recorded.
+            'tests/Fixtures/**',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],

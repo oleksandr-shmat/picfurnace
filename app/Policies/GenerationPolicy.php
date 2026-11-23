@@ -16,4 +16,12 @@ class GenerationPolicy
     {
         return $user->isAdmin() || $generation->user_id === $user->id;
     }
+
+    /**
+     * Only the author cancels their own generation.
+     */
+    public function cancel(User $user, Generation $generation): bool
+    {
+        return $generation->user_id === $user->id;
+    }
 }
