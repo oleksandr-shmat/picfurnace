@@ -13,6 +13,23 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    # The tests run against PostgreSQL, the same database as in production. The port and the
+    # credentials are the ones phpunit.xml uses.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: pixelforge
+          POSTGRES_PASSWORD: pixelforge
+          POSTGRES_DB: pixelforge_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U pixelforge"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -22,17 +39,41 @@ jobs:
       - name: Setup PHP
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
         with:
-          php-version: '8.3'
+          php-version: '8.5'
+          extensions: pdo_pgsql
           tools: composer:v2
-          coverage: none
+          # PCOV is what the mutation testing step needs.
+          coverage: pcov
 
       - name: Setup Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: '22'
 
-      - name: Setup Application
-        run: composer setup
+      - name: Install dependencies
+        run: |
+          composer install --no-interaction --prefer-dist
+          npm ci
 
-      - name: Run CI Checks
-        run: composer ci:check
+      - name: Prepare the application
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          # The TypeScript checks need the typed routes that Wayfinder generates.
+          php artisan wayfinder:generate --with-form
+
+      - name: Frontend checks
+        run: |
+          npm run check
+          npm run types:check
+
+      - name: Backend checks (code style, static analysis, tests)
+        run: composer test
+
+      # Lines run by the tests. It says nothing about whether the tests check anything: that is
+      # what the mutation testing below measures.
+      - name: Code coverage
+        run: composer coverage
+
+      - name: Mutation testing
+        run: composer mutate

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Enums\GenerationStatus;
+use Carbon\CarbonImmutable;
 use Database\Factories\GenerationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -33,15 +33,16 @@ use Illuminate\Support\Carbon;
  * @property string|null $failure_code
  * @property string|null $failure_message
  * @property string|null $image_url
- * @property Carbon|null $image_expires_at
+ * @property CarbonImmutable|null $image_expires_at
  * @property string|null $image_path
- * @property Carbon|null $image_stored_at
- * @property Carbon|null $image_purged_at
+ * @property CarbonImmutable|null $image_stored_at
+ * @property CarbonImmutable|null $image_purged_at
  * @property int $attempts
- * @property Carbon|null $next_attempt_at
- * @property Carbon|null $claimed_at
- * @property Carbon|null $submitted_at
- * @property Carbon|null $completed_at
+ * @property CarbonImmutable|null $next_attempt_at
+ * @property CarbonImmutable|null $claimed_at
+ * @property CarbonImmutable|null $submitted_at
+ * @property CarbonImmutable|null $completed_at
+ * @property CarbonImmutable $created_at
  */
 class Generation extends Model
 {

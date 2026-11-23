@@ -5,9 +5,10 @@ use App\Http\Controllers\GenerationController;
 use App\Http\Controllers\GenerationImageController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'Welcome')->name('home');
+// There is no public page: guests are sent on from the dashboard to the sign-in page.
+Route::redirect('/', '/dashboard')->name('home');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [GenerationController::class, 'index'])->name('dashboard');
 
     Route::post('generations', [GenerationController::class, 'store'])->name('generations.store');

@@ -6,12 +6,14 @@ use App\Billing\Billing;
 use App\Enums\GenerationStatus;
 use App\Generations\Webhooks\WebhookEventHandler;
 use App\Generations\Webhooks\WebhookOutcome;
+use App\Http\Controllers\PixelforgeWebhookController;
 use App\Models\Generation;
 use App\Models\WebhookEvent;
 use App\Pixelforge\Webhook\ProviderEvent;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
 
-mutates(WebhookEventHandler::class, ProviderEvent::class);
+mutates(WebhookEventHandler::class, ProviderEvent::class, PixelforgeWebhookController::class);
 
 const WEBHOOK_SECRET = 'whsec_test_secret';
 
@@ -201,6 +203,14 @@ it('refuses a signed body it cannot read', function (array|string $body) {
     'generation event without a generation' => [['id' => 'evt_1', 'type' => 'generation.succeeded', 'data' => []]],
     'succeeded without usage' => [fn () => ['id' => 'evt_1', 'type' => 'generation.succeeded', 'data' => ['object' => ['usage' => null] + pixelforgeFixture('event_succeeded')['data']['object']]]],
 ]);
+
+it('reports a signed event it cannot read, because Pixelforge should not send those', function () {
+    Exceptions::fake();
+
+    deliver($this, ['id' => 'evt_1', 'type' => 'generation.succeeded', 'data' => []])->assertStatus(400);
+
+    Exceptions::assertReported(InvalidArgumentException::class);
+});
 
 it('does not remember an event it failed to apply, so that the retry is processed', function () {
     // linked to another Pixelforge generation: applying the event is refused

@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\GenerationImageController;
 use App\Models\Generation;
 use App\Models\User;
 use Illuminate\Support\Facades\Storage;
+
+mutates(GenerationImageController::class);
 
 beforeEach(function () {
     Storage::fake('images');
@@ -56,6 +59,12 @@ it('has nothing to show once the copy is deleted and the Pixelforge link has exp
         'image_url' => 'https://images.pixelforge.test/gen.png?signature=abc',
         'image_expires_at' => now()->subHour(),
     ]);
+
+    $this->actingAs($this->owner)->get(route('generations.image', $this->generation->uuid))->assertNotFound();
+});
+
+it('has nothing to show when the Pixelforge link has no expiry date and there is no copy', function () {
+    $this->generation->update(['image_path' => null, 'image_url' => 'https://images.pixelforge.test/a.png', 'image_expires_at' => null]);
 
     $this->actingAs($this->owner)->get(route('generations.image', $this->generation->uuid))->assertNotFound();
 });

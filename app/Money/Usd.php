@@ -43,6 +43,7 @@ final class Usd
             throw new InvalidArgumentException("Invalid nanodollar amount [{$value}]: expected an integer.");
         }
 
+        /** @var numeric-string $value Checked by the pattern above. */
         return new Money($value, self::currency());
     }
 

@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 use App\Enums\GenerationStatus;
 use App\Generations\GenerationLifecycle;
+use App\Http\Controllers\GenerationController;
+use App\Http\Resources\GenerationResource;
 use App\Models\Generation;
 use App\Models\User;
+use App\Pixelforge\Client\RetryLater;
+use App\Policies\GenerationPolicy;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
+
+mutates(GenerationController::class, GenerationResource::class, GenerationPolicy::class);
 
 beforeEach(function () {
     Http::preventStrayRequests();
@@ -53,12 +60,60 @@ it('tells how long images are kept, even when prices are not available', functio
         ->where('options', null));
 });
 
-it('still opens when Pixelforge cannot be reached, without options for the form', function () {
+it('still opens when Pixelforge cannot be reached, without options for the form, and reports it', function () {
+    Exceptions::fake();
     Http::fake(['*/pricing' => fn () => throw new ConnectionException('down')]);
 
     $this->actingAs($this->user)->get(route('dashboard'))->assertOk()->assertInertia(fn (Assert $page) => $page
         ->where('options', null)
         ->has('generations', 0));
+
+    Exceptions::assertReported(RetryLater::class);
+});
+
+it('carries what a card shows: the request and when it was made', function () {
+    Generation::factory()->create([
+        'user_id' => $this->user->id,
+        'prompt' => 'A lighthouse at dawn',
+        'size' => '1536x1024',
+        'quality' => 'high',
+        'reference_image_urls' => ['https://example.com/a.png'],
+        'created_at' => CarbonImmutable::parse('2026-11-20 08:30:00', 'UTC'),
+    ]);
+
+    $this->actingAs($this->user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+        ->where('generations.0.prompt', 'A lighthouse at dawn')
+        ->where('generations.0.size', '1536x1024')
+        ->where('generations.0.quality', 'high')
+        ->where('generations.0.referenceImages', ['https://example.com/a.png'])
+        ->where('generations.0.createdAt', '2026-11-20T08:30:00+00:00')
+        ->where('generations.0.status', 'pending')
+        ->where('generations.0.charged', null)
+        ->where('generations.0.failureMessage', null));
+});
+
+it('still shows an image whose link has no expiry date, and an image that has no date to show', function (array $state, ?string $availableUntil) {
+    Generation::factory()->succeeded()->create($state + [
+        'user_id' => $this->user->id,
+        'completed_at' => CarbonImmutable::parse('2026-11-20 08:30:00', 'UTC'),
+    ]);
+
+    $this->actingAs($this->user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+        ->where('generations.0.image.availableUntil', $availableUntil));
+})->with([
+    'a copy of our own' => [['image_path' => 'generations/a.png'], '2026-12-04T08:30:00+00:00'],
+    'a copy that was already deleted' => [['image_path' => 'generations/a.png', 'image_purged_at' => now()], null],
+]);
+
+it('has no image to offer when the Pixelforge link has no expiry date and there is no copy', function () {
+    Generation::factory()->succeeded()->create([
+        'user_id' => $this->user->id,
+        'image_url' => 'https://images.pixelforge.test/a.png',
+        'image_expires_at' => null,
+    ]);
+
+    $this->actingAs($this->user)->get(route('dashboard'))->assertInertia(fn (Assert $page) => $page
+        ->where('generations.0.image', ['url' => null, 'availableUntil' => null]));
 });
 
 it('shows a succeeded generation with the exact price and never the cost to us', function () {

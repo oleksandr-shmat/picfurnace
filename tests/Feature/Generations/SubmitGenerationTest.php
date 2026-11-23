@@ -6,6 +6,9 @@ use App\Billing\Billing;
 use App\Billing\InsufficientBalance;
 use App\Enums\GenerationStatus;
 use App\Generations\GenerationSubmitter;
+use App\Http\Controllers\EstimateController;
+use App\Http\Requests\Generations\EstimateGenerationRequest;
+use App\Http\Requests\Generations\StoreGenerationRequest;
 use App\Models\Generation;
 use App\Models\User;
 use App\Pixelforge\Client\CachedPricing;
@@ -14,7 +17,14 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
-mutates(GenerationSubmitter::class, Quoter::class, CachedPricing::class);
+mutates(
+    GenerationSubmitter::class,
+    Quoter::class,
+    CachedPricing::class,
+    EstimateController::class,
+    EstimateGenerationRequest::class,
+    StoreGenerationRequest::class,
+);
 
 beforeEach(function () {
     Http::preventStrayRequests();
@@ -74,7 +84,16 @@ it('refuses an invalid generation and stores nothing', function (array $override
     'the same reference twice' => [['reference_images' => ['https://example.com/a.png', 'https://example.com/a.png']], 'reference_images.0'],
     'reference that is not a URL' => [['reference_images' => ['not a url']], 'reference_images.0'],
     'reference with another scheme' => [['reference_images' => ['javascript:alert(1)']], 'reference_images.0'],
+    'prompt that is a list' => [['prompt' => ['a']], 'prompt'],
 ]);
+
+it('stores the references as a plain list, whatever keys they came with', function () {
+    $this->actingAs($this->user)->post(route('generations.store'), validGeneration([
+        'reference_images' => ['first' => 'https://example.com/a.png', 'second' => 'https://example.com/b.png'],
+    ]))->assertSessionHasNoErrors();
+
+    expect(Generation::sole()->reference_image_urls)->toBe(['https://example.com/a.png', 'https://example.com/b.png']);
+});
 
 it('accepts the limits themselves', function () {
     $this->actingAs($this->user)->post(route('generations.store'), validGeneration([
@@ -168,6 +187,32 @@ it('validates what the estimate depends on', function (array $overrides, string 
     'unknown quality' => [['quality' => 'ultra'], 'quality'],
     'unknown size' => [['size' => '10x10'], 'size'],
     'too many references' => [['reference_images' => array_fill(0, 5, 'https://example.com/a.png')], 'reference_images'],
+    'prompt over 4000 characters' => [['prompt' => str_repeat('a', 4001)], 'prompt'],
+    'prompt that is a list' => [['prompt' => ['a']], 'prompt'],
+    'reference that is not a URL' => [['reference_images' => ['not a url']], 'reference_images.0'],
+    'the same reference twice' => [['reference_images' => ['https://example.com/a.png', 'https://example.com/a.png']], 'reference_images.0'],
+    'reference that is a list' => [['reference_images' => [['https://example.com/a.png']]], 'reference_images.0'],
+]);
+
+it('needs the quality and the size, for the estimate and for sending', function (string $field, string $route) {
+    $data = validGeneration();
+    unset($data[$field]);
+
+    $this->actingAs($this->user)->postJson(route($route), $data)->assertUnprocessable()->assertJsonValidationErrors($field);
+})->with([
+    'quality of the estimate' => ['quality', 'generations.estimate'],
+    'size of the estimate' => ['size', 'generations.estimate'],
+    'quality of a generation' => ['quality', 'generations.store'],
+    'size of a generation' => ['size', 'generations.store'],
+]);
+
+it('estimates with an empty prompt and no references, however the browser sends them', function (array $overrides) {
+    $this->actingAs($this->user)->postJson(route('generations.estimate'), ['quality' => 'low', 'size' => '1024x1024'] + $overrides)
+        ->assertOk();
+})->with([
+    'empty text' => [['prompt' => '']],
+    'null' => [['prompt' => null, 'reference_images' => null]],
+    'an empty list' => [['reference_images' => []]],
 ]);
 
 it('asks Pixelforge for the pricing once, however many estimates are made', function () {

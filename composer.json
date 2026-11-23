@@ -68,7 +68,7 @@
             "@test"
         ],
         "types:check": [
-            "phpstan analyse"
+            "phpstan analyse --memory-limit=1G"
         ],
         "test": [
             "@php artisan config:clear --ansi",
@@ -94,7 +94,8 @@
         "pre-package-uninstall": [
             "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ],
-        "mutate": "pest --mutate --parallel --no-cache --min=90"
+        "coverage": "pest --coverage --min=97",
+        "mutate": "pest --mutate --parallel --no-cache --min=91"
     },
     "extra": {
         "laravel": {

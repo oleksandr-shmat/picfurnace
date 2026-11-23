@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace App\Models;
 
 use App\Generations\Webhooks\WebhookOutcome;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -17,7 +17,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed> $payload
  * @property int $deliveries
  * @property WebhookOutcome|null $outcome
- * @property Carbon|null $processed_at
+ * @property CarbonImmutable|null $processed_at
  */
 class WebhookEvent extends Model
 {
