@@ -128,12 +128,12 @@ app/
 
 It runs on one small server (a DigitalOcean droplet, 1 vCPU / 2 GB) with Docker Compose (`compose.prod.yml`). One image (`Dockerfile`) is used for every role:
 
-| Service     | What it does                                                                         |
-| ----------- | ------------------------------------------------------------------------------------ |
-| `web`       | FrankenPHP (Caddy and PHP in one process); gets and renews the HTTPS certificate      |
-| `worker`    | `queue:work`: sends a generation right after it is submitted                          |
-| `scheduler` | `schedule:work`: the watchdog of the dispatcher, reconciliation, image copies         |
-| `db`        | PostgreSQL 17 on a Docker volume                                                      |
+| Service     | What it does                                                                     |
+| ----------- | -------------------------------------------------------------------------------- |
+| `web`       | FrankenPHP (Caddy and PHP in one process); gets and renews the HTTPS certificate |
+| `worker`    | `queue:work`: sends a generation right after it is submitted                     |
+| `scheduler` | `schedule:work`: the watchdog of the dispatcher, reconciliation, image copies    |
+| `db`        | PostgreSQL 17 on a Docker volume                                                 |
 
 Images are copied to a Docker volume (the disk of the server), so no object storage is needed.
 
