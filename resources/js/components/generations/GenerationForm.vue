@@ -20,6 +20,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useEstimate } from '@/composables/useEstimate';
+import { qualityLabel, sizeLabel } from '@/lib/labels';
 import { referenceProblems, usableReferences } from '@/lib/referenceImages';
 import type { FormOptions } from '@/types/generations';
 
@@ -35,18 +36,6 @@ const form = useForm({
     size: props.options.defaultSize,
     reference_images: [] as string[],
 });
-
-function sizeLabel(size: string): string {
-    const [width, height] = size.split('x').map(Number);
-    const shape =
-        width > height ? 'landscape' : width < height ? 'portrait' : 'square';
-
-    return `${width} × ${height} (${shape})`;
-}
-
-function qualityLabel(quality: string): string {
-    return quality.charAt(0).toUpperCase() + quality.slice(1);
-}
 
 // Counted in characters, not UTF-16 units, the way the server counts them.
 const promptLength = computed(() => [...form.prompt.trim()].length);

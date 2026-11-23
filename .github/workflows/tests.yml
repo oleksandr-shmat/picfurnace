@@ -66,6 +66,7 @@ jobs:
         run: |
           npm run check
           npm run types:check
+          npm test
 
       - name: Backend checks (code style, static analysis, tests)
         run: composer test
