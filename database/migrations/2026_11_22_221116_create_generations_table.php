@@ -18,7 +18,8 @@ return new class extends Migration
             // webhooks are matched back, even one that arrives before the POST response returns.
             $table->uuid('uuid')->unique();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->string('status', 16)->default('pending');
+            // On PostgreSQL this is a varchar with a CHECK on the listed values.
+            $table->enum('status', ['pending', 'queued', 'processing', 'succeeded', 'failed'])->default('pending');
 
             // The request.
             $table->text('prompt');
@@ -60,7 +61,6 @@ return new class extends Migration
             $table->index(['status', 'next_attempt_at']);
         });
 
-        DB::statement("ALTER TABLE generations ADD CONSTRAINT generations_status_check CHECK (status IN ('pending', 'queued', 'processing', 'succeeded', 'failed'))");
         DB::statement('ALTER TABLE generations ADD CONSTRAINT generations_money_check CHECK (
             estimated_price_min_nano >= 0
             AND estimated_price_min_nano <= estimated_price_expected_nano

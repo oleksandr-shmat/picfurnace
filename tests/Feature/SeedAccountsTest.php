@@ -54,9 +54,26 @@ it('takes the e-mail addresses and passwords from the configuration', function (
     $this->assertAuthenticated();
 });
 
-it('refuses to create accounts with the default password in production', function () {
+it('treats an empty password from the environment as not set, never as an empty password', function () {
+    // `DEMO_USER_PASSWORD=` in a .env file reaches the configuration as an empty string
+    config(['accounts.demo.password' => '', 'accounts.admin.password' => '']);
+
+    $this->seed(DatabaseSeeder::class);
+
+    $this->post(route('login.store'), ['email' => 'demo@example.com', 'password' => '']);
+    $this->assertGuest();
+
+    $this->post(route('login.store'), ['email' => 'demo@example.com', 'password' => 'password']);
+    $this->assertAuthenticated();
+});
+
+it('refuses to create accounts with the default password in production', function (?string $password) {
+    config(['accounts.demo.password' => $password]);
     app()->detectEnvironment(fn () => 'production');
 
     // Called directly: the db:seed command itself asks for confirmation in production.
     (new DatabaseSeeder)->run();
-})->throws(RuntimeException::class, 'Set the password of the demo account');
+})->throws(RuntimeException::class, 'Set the password of the demo account')->with([
+    'not set' => [null],
+    'set to nothing' => [''],
+]);

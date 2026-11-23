@@ -43,7 +43,7 @@ it('creates a generation with our uuid as the idempotency key and in the metadat
         && $request->url() === 'https://pixelforge.test/v1/generations'
         && $request->hasHeader('Authorization', 'Bearer sk_test_key')
         && $request->hasHeader('Idempotency-Key', '6f1c2a9e-3b7d-4e0a-9c55-2d8f1b4e7a10')
-        && $request->hasHeader('User-Agent', 'image-studio/1.0')
+        && $request->hasHeader('User-Agent', 'picfurnace/1.0')
         && $request->data() === [
             'prompt' => 'A red cube',
             'size' => '1024x1024',

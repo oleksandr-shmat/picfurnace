@@ -31,7 +31,8 @@ class DatabaseSeeder extends Seeder
     {
         $password = config("accounts.{$key}.password");
 
-        if ($password !== null) {
+        // An empty value counts as "not set": `.env.example` lists the variable with nothing after it.
+        if (filled($password)) {
             return $password;
         }
 

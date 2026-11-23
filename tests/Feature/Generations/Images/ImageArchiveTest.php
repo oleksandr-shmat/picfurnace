@@ -55,7 +55,7 @@ it('copies the image to our disk', function () {
     Storage::disk('images')->assertExists($generation->image_path);
     expect(Storage::disk('images')->get($generation->image_path))->toBe(PNG_BYTES);
     Http::assertSent(fn (Request $request) => $request->url() === 'https://images.pixelforge.test/gen.png?signature=abc'
-        && $request->hasHeader('User-Agent', 'image-studio/1.0'));
+        && $request->hasHeader('User-Agent', 'picfurnace/1.0'));
 });
 
 it('stores nothing unless it really got an image', function (Closure $answer) {
