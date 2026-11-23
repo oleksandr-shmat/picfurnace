@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Generations;
 
 use App\Enums\GenerationStatus;
+use App\Jobs\DispatchGenerationsJob;
 use App\Models\Generation;
 use App\Pixelforge\Client\PixelforgeClient;
 use App\Pixelforge\Client\RequestRejected;
 use App\Pixelforge\Client\RetryLater;
 use App\Pixelforge\Client\UnexpectedResponse;
 use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -156,8 +158,8 @@ final class GenerationDispatcher
 
         match ($e->errorCode) {
             // Both limits are shared by the whole account: pause everybody, not only this generation.
-            'rate_limit_exceeded', 'concurrency_limit_exceeded' => $this->pause->forSeconds($e->retryAfterSeconds),
-            'daily_limit_exceeded' => $this->pause->until(CarbonImmutable::now('UTC')->addDay()->startOfDay()),
+            'rate_limit_exceeded', 'concurrency_limit_exceeded' => $this->wakeUpAt($this->pause->forSeconds($e->retryAfterSeconds)),
+            'daily_limit_exceeded' => $this->wakeUpAt($this->pause->until(CarbonImmutable::now('UTC')->addDay()->startOfDay())),
             default => $this->backOffOrGiveUp($generation, $e->retryAfterSeconds),
         };
     }
@@ -179,9 +181,19 @@ final class GenerationDispatcher
         // 5, 10, 20, 40 seconds: the fifth failed attempt gives up.
         $backoffSeconds = self::BACKOFF_BASE_SECONDS * 2 ** ($failedAttempts - 1);
 
-        $generation->update([
-            'attempts' => $failedAttempts,
-            'next_attempt_at' => now()->addSeconds(max($backoffSeconds, $retryAfterSeconds)),
-        ]);
+        $retryAt = now()->addSeconds(max($backoffSeconds, $retryAfterSeconds));
+
+        $generation->update(['attempts' => $failedAttempts, 'next_attempt_at' => $retryAt]);
+
+        $this->wakeUpAt($retryAt);
+    }
+
+    /**
+     * Queues a run for the moment something becomes due (a retry, the end of a pause), so that
+     * nothing has to be polled for it. The scheduler only catches what gets stuck.
+     */
+    private function wakeUpAt(CarbonInterface $moment): void
+    {
+        DispatchGenerationsJob::dispatch()->delay($moment);
     }
 }

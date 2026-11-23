@@ -103,7 +103,7 @@ app/
 
 - **Normalisation boundary.** `fromArray` of the `Api` and `Webhook` classes turns untyped JSON into typed values and throws on anything unexpected (a succeeded generation without usage is refused, never charged as zero).
 - **`GenerationLifecycle`** is the only place that changes a status or charges a user.
-- **Dispatch is hybrid.** A queued job sends a generation right after it is submitted and whenever one finishes; the scheduler runs the same dispatcher every minute as a safety net, so it also works without a queue worker.
+- **Dispatch is a queued job, with a watchdog.** `DispatchGenerationsJob` sends waiting generations right after one is submitted and whenever one finishes, and it is queued with a delay for the moment a retry is due or a pause ends. The scheduler runs the same dispatcher every minute only as a watchdog for whatever gets stuck (a lost job, a worker that was down), so the app also works, a little slower, without a queue worker.
 - **Estimate.** Output and reference-image tokens are exact. Text tokens are `ceil(characters / 4)` within the documented 15%, reasoning tokens fall in a range per quality; bounds are rounded outwards.
 
 ## Decisions and trade-offs
@@ -123,6 +123,19 @@ app/
 - Recorded Pixelforge responses are used as fixtures, and expected numbers in tests are computed independently of the code.
 
 **Not covered, said plainly:** there are no browser tests (the frontend has unit tests for its plain logic, lint and types, plus manual checks); concurrency is covered by two targeted tests, not a general harness; Pixelforge itself was checked by hand against the live API; PCOV has no branch coverage.
+
+## Deploying (Laravel Cloud)
+
+The app runs on Laravel Cloud: PHP 8.5, serverless PostgreSQL, an object-storage bucket.
+
+- **Build commands:** `composer install --no-dev`, `npm ci --audit false`, `npm run build`, `php artisan optimize`
+- **Deploy commands:** `php artisan migrate --force`, then `php artisan db:seed --force` (the seeder is safe to run again)
+- **Scheduler:** enable the Scheduler toggle (runs `schedule:run` every minute).
+- **Queue worker:** one worker for the default queue (`QUEUE_CONNECTION=database`), so a generation is sent right after it is submitted. Without it the scheduler still sends it within a minute.
+- **Bucket:** attach it as the default disk. Cloud then sets `FILESYSTEM_DISK` and the `AWS_*` variables, and image copies go there (the local disk of Cloud is ephemeral).
+- **Environment variables:** `APP_ENV=production`, `APP_KEY`, `APP_URL`, `PIXELFORGE_API_KEY`, `PIXELFORGE_WEBHOOK_SECRET`, `DEMO_USER_PASSWORD`, `ADMIN_PASSWORD` (the seeder refuses to run in production without the passwords).
+- **Pixelforge key:** create a key for this environment and set its webhook URL to `https://<app>/webhooks/pixelforge`.
+- **Deploy hook:** with the hook enabled and its URL in the repository secret `LARAVEL_CLOUD_DEPLOY_HOOK`, the `deploy` job of the workflow triggers a deploy only after every check of the same commit has passed.
 
 ## Roadmap
 

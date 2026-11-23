@@ -78,3 +78,21 @@ jobs:
 
       - name: Mutation testing
         run: composer mutate
+
+  # Laravel Cloud pulls the code, builds it and runs the deploy commands itself. This job only
+  # tells it to start, and only when every check above passed.
+  deploy:
+    needs: ci
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger the deploy hook of Laravel Cloud
+        env:
+          DEPLOY_HOOK: ${{ secrets.LARAVEL_CLOUD_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "LARAVEL_CLOUD_DEPLOY_HOOK is not set, nothing to deploy."
+            exit 0
+          fi
+          curl --fail --silent --show-error -X POST "$DEPLOY_HOOK?commit_hash=${{ github.sha }}"

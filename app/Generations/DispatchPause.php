@@ -18,14 +18,22 @@ final class DispatchPause
 {
     private const string CACHE_KEY = 'generation-dispatch-paused';
 
-    public function forSeconds(int $seconds): void
+    /**
+     * @return CarbonImmutable The moment the pause ends.
+     */
+    public function forSeconds(int $seconds): CarbonImmutable
     {
-        $this->until(CarbonImmutable::now()->addSeconds($seconds));
+        return $this->until(CarbonImmutable::now()->addSeconds($seconds));
     }
 
-    public function until(CarbonImmutable $moment): void
+    /**
+     * @return CarbonImmutable The moment the pause ends.
+     */
+    public function until(CarbonImmutable $moment): CarbonImmutable
     {
         Cache::put(self::CACHE_KEY, $moment->toIso8601String(), $moment);
+
+        return $moment;
     }
 
     public function isActive(): bool

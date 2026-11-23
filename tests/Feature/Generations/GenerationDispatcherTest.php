@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\GenerationStatus;
 use App\Generations\GenerationDispatcher;
 use App\Generations\GenerationLifecycle;
+use App\Jobs\DispatchGenerationsJob;
 use App\Models\Generation;
 use App\Models\User;
 use App\Pixelforge\Client\UnexpectedResponse;
@@ -15,11 +16,19 @@ use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 
 mutates(GenerationDispatcher::class);
 
+/** How many queued runs of the dispatcher are set for exactly this moment. */
+function runsQueuedFor(CarbonImmutable $moment): int
+{
+    return Queue::pushed(DispatchGenerationsJob::class, fn (DispatchGenerationsJob $job) => $job->delay?->equalTo($moment) ?? false)->count();
+}
+
 beforeEach(function () {
     Http::preventStrayRequests();
+    Queue::fake();
     Cache::flush();
     $this->travelTo(CarbonImmutable::parse('2026-11-23 15:00:00', 'UTC'));
     $this->dispatcher = app(GenerationDispatcher::class);
@@ -171,6 +180,9 @@ it('pauses every user when a limit shared by the account is hit', function (stri
         ->and($first->attempts)->toBe(0)
         ->and($second->refresh()->claimed_at)->toBeNull();
 
+    // a run is queued for the moment the pause ends, so nothing has to poll for it
+    expect(runsQueuedFor(now()->addSeconds((int) $response[2]['Retry-After'])))->toBe(1);
+
     // still paused just before Retry-After is over, sending again right after
     pixelforgeAcceptsEverything();
     $this->travel($response[2]['Retry-After'] - 1)->seconds();
@@ -187,7 +199,8 @@ it('waits for the next UTC day when the daily limit is used up', function () {
     $generation = waitingGeneration();
 
     $this->dispatcher->dispatchDue();
-    expect(Http::recorded())->toHaveCount(1);
+    expect(Http::recorded())->toHaveCount(1)
+        ->and(runsQueuedFor(CarbonImmutable::parse('2026-11-24 00:00:00', 'UTC')))->toBe(1);
 
     pixelforgeAcceptsEverything();
     $this->travelTo(CarbonImmutable::parse('2026-11-23 23:59:59', 'UTC'));
@@ -209,7 +222,9 @@ it('backs off further after each failed attempt and honours a longer Retry-After
     expect($generation->status)->toBe(GenerationStatus::Pending)
         ->and($generation->attempts)->toBe($failedBefore + 1)
         ->and($generation->next_attempt_at->equalTo(now()->addSeconds($waitSeconds)))->toBeTrue()
-        ->and($generation->claimed_at)->toBeNull();
+        ->and($generation->claimed_at)->toBeNull()
+        // a run is queued for the moment the retry is due
+        ->and(runsQueuedFor(now()->addSeconds($waitSeconds)))->toBe(1);
 })->with([
     'first failure' => [0, '2', 5],
     'second failure' => [1, '2', 10],
@@ -228,6 +243,9 @@ it('gives up after the fifth failed attempt, for free', function () {
     expect($generation->status)->toBe(GenerationStatus::Failed)
         ->and($generation->failure_code)->toBe('provider_unavailable')
         ->and($generation->charged_nano)->toBe(0);
+
+    // nothing is left to retry, so no run is queued for later
+    Queue::assertNothingPushed();
 });
 
 it('keeps a generation that may exist at the provider from being cancelled for free', function () {
