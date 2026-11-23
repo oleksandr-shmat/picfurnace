@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Generations;
+namespace App\Jobs;
 
+use App\Generations\GenerationDispatcher;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;

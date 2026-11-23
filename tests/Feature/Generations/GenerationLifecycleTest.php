@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 use App\Billing\Billing;
 use App\Enums\GenerationStatus;
-use App\Generations\DispatchGenerationsJob;
 use App\Generations\GenerationLifecycle;
+use App\Jobs\DispatchGenerationsJob;
 use App\Models\Generation;
 use App\Money\Usd;
 use Illuminate\Support\Facades\Log;

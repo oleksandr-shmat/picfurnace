@@ -6,6 +6,7 @@ namespace App\Generations;
 
 use App\Billing\Billing;
 use App\Enums\GenerationStatus;
+use App\Jobs\DispatchGenerationsJob;
 use App\Models\Generation;
 use App\Money\Usd;
 use App\Pixelforge\Api\ProviderGeneration;

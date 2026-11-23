@@ -3,8 +3,8 @@
 declare(strict_types=1);
 
 use App\Enums\GenerationStatus;
-use App\Generations\DispatchGenerationsJob;
 use App\Generations\GenerationDispatcher;
+use App\Jobs\DispatchGenerationsJob;
 use App\Models\Generation;
 use Illuminate\Support\Facades\Http;
 

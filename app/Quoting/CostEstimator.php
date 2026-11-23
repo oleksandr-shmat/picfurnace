@@ -4,10 +4,8 @@ declare(strict_types=1);
 
 namespace App\Quoting;
 
-use App\Pixelforge\Api\Limits;
 use App\Pixelforge\Api\Pricing;
 use App\Pixelforge\Api\Usage;
-use InvalidArgumentException;
 use Money\Money;
 
 /**
@@ -19,17 +17,14 @@ use Money\Money;
  */
 final class CostEstimator
 {
-    public function __construct(
-        private readonly Pricing $pricing,
-        private readonly Limits $limits,
-    ) {}
+    public function __construct(private readonly Pricing $pricing) {}
 
+    /**
+     * The number of reference images is not checked here: the form request limits it before an
+     * estimate is asked for, and Pixelforge refuses a generation with too many anyway.
+     */
     public function estimate(string $prompt, string $quality, string $size, int $referenceImages): CostEstimate
     {
-        if ($referenceImages < 0 || $referenceImages > $this->limits->maxReferenceImages) {
-            throw new InvalidArgumentException("A generation takes between 0 and {$this->limits->maxReferenceImages} reference images.");
-        }
-
         $perToken = $this->pricing->charactersPerTextToken;
         $variance = $this->pricing->textVariancePercent;
 

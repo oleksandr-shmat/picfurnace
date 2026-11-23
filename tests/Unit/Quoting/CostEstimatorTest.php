@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Money\Usd;
-use App\Pixelforge\Api\Limits;
 use App\Pixelforge\Api\Pricing;
 use App\Pixelforge\Api\Rates;
 use App\Pixelforge\Api\Usage;
@@ -15,7 +14,7 @@ mutates(CostEstimator::class, CostEstimate::class);
 
 function estimator(): CostEstimator
 {
-    return new CostEstimator(Pricing::fromArray(pixelforgeFixture('pricing')), new Limits(4_000, 4));
+    return new CostEstimator(Pricing::fromArray(pixelforgeFixture('pricing')));
 }
 
 it('reproduces the documented worst case as the maximum', function () {
@@ -77,27 +76,12 @@ it('applies the markup to every bound for the price shown to the user', function
         ->and(Usd::toInt($estimate->min))->toBe(357_781_250);
 });
 
-it('rejects more than four reference images', function () {
-    estimator()->estimate('x', 'low', '1024x1024', 5);
-})->throws(InvalidArgumentException::class);
-
-it('uses the injected reference image limit', function () {
-    $estimator = new CostEstimator(Pricing::fromArray(pixelforgeFixture('pricing')), new Limits(4_000, 1));
-
-    $estimator->estimate('x', 'low', '1024x1024', 1);
-    expect(fn () => $estimator->estimate('x', 'low', '1024x1024', 2))->toThrow(InvalidArgumentException::class);
-});
-
-it('rejects a negative number of reference images', function () {
-    estimator()->estimate('x', 'low', '1024x1024', -1);
-})->throws(InvalidArgumentException::class, 'A generation takes between 0 and 4 reference images.');
-
 it('bounds the text tokens by the documented variance for every prompt length', function (int $percent) {
     // Only text tokens cost anything here (1 nanodollar each), so a cost equals a token count.
     $payload = pixelforgeFixture('pricing');
     $payload['tokens']['text_token_variance'] = $percent / 100;
     $payload['rates'] = ['input_text_tokens' => '0.001', 'input_image_tokens' => '0.000', 'output_tokens' => '0.000', 'reasoning_tokens' => '0.000'];
-    $isolated = new CostEstimator(Pricing::fromArray($payload), new Limits(4_000, 4));
+    $isolated = new CostEstimator(Pricing::fromArray($payload));
 
     for ($characters = 0; $characters <= 1_500; $characters++) {
         $estimated = (int) ceil($characters / 4);

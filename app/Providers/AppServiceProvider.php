@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Billing\Billing;
 use App\Billing\NoBalanceBilling;
+use App\Generations\DispatchPause;
 use App\Generations\GenerationDispatcher;
 use App\Generations\GenerationLifecycle;
 use App\Generations\GenerationSubmitter;
@@ -44,6 +45,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(GenerationDispatcher::class, fn ($app) => new GenerationDispatcher(
             $app->make(PixelforgeClient::class),
             $app->make(GenerationLifecycle::class),
+            $app->make(DispatchPause::class),
             config('pixelforge.max_concurrent_generations'),
         ));
         $this->app->singleton(GenerationSubmitter::class, fn ($app) => new GenerationSubmitter(

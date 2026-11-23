@@ -7,6 +7,7 @@ namespace App\Generations;
 use App\Billing\Billing;
 use App\Billing\InsufficientBalance;
 use App\Enums\GenerationStatus;
+use App\Jobs\DispatchGenerationsJob;
 use App\Models\Generation;
 use App\Models\User;
 use App\Money\Usd;

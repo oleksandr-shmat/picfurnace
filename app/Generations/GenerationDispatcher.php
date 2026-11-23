@@ -11,7 +11,6 @@ use App\Pixelforge\Client\RequestRejected;
 use App\Pixelforge\Client\RetryLater;
 use App\Pixelforge\Client\UnexpectedResponse;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -28,8 +27,6 @@ final class GenerationDispatcher
 {
     private const string LOCK_KEY = 'generation-dispatch';
 
-    private const string PAUSED_KEY = 'generation-dispatch-paused';
-
     // Longer than a run can take: at most a few requests, each with a timeout of 15 seconds.
     private const int LOCK_SECONDS = 180;
 
@@ -41,6 +38,7 @@ final class GenerationDispatcher
     public function __construct(
         private readonly PixelforgeClient $client,
         private readonly GenerationLifecycle $lifecycle,
+        private readonly DispatchPause $pause,
         private readonly int $maxConcurrent,
     ) {}
 
@@ -55,7 +53,7 @@ final class GenerationDispatcher
         try {
             foreach ($this->nextToSend() as $generation) {
                 // A limit hit by an earlier generation of this run pauses all the others too.
-                if ($this->isPaused()) {
+                if ($this->pause->isActive()) {
                     break;
                 }
 
@@ -67,9 +65,9 @@ final class GenerationDispatcher
     }
 
     /**
-     * @return Collection<int, Generation>
+     * @return iterable<Generation>
      */
-    private function nextToSend(): Collection
+    private function nextToSend(): iterable
     {
         $active = Generation::query()->whereIn('status', $this->activeStatuses())->count();
         $freeSlots = max(0, $this->maxConcurrent - $active);
@@ -158,8 +156,8 @@ final class GenerationDispatcher
 
         match ($e->errorCode) {
             // Both limits are shared by the whole account: pause everybody, not only this generation.
-            'rate_limit_exceeded', 'concurrency_limit_exceeded' => $this->pauseFor($e->retryAfterSeconds),
-            'daily_limit_exceeded' => $this->pauseUntil(CarbonImmutable::now('UTC')->addDay()->startOfDay()),
+            'rate_limit_exceeded', 'concurrency_limit_exceeded' => $this->pause->forSeconds($e->retryAfterSeconds),
+            'daily_limit_exceeded' => $this->pause->until(CarbonImmutable::now('UTC')->addDay()->startOfDay()),
             default => $this->backOffOrGiveUp($generation, $e->retryAfterSeconds),
         };
     }
@@ -185,23 +183,5 @@ final class GenerationDispatcher
             'attempts' => $failedAttempts,
             'next_attempt_at' => now()->addSeconds(max($backoffSeconds, $retryAfterSeconds)),
         ]);
-    }
-
-    private function pauseFor(int $seconds): void
-    {
-        $this->pauseUntil(CarbonImmutable::now()->addSeconds($seconds));
-    }
-
-    /**
-     * The pause is a cache entry that expires at the given moment.
-     */
-    private function pauseUntil(CarbonImmutable $moment): void
-    {
-        Cache::put(self::PAUSED_KEY, $moment->toIso8601String(), $moment);
-    }
-
-    private function isPaused(): bool
-    {
-        return Cache::has(self::PAUSED_KEY);
     }
 }

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Quoting;
 
-use App\Pixelforge\Api\Limits;
 use App\Pixelforge\Client\CachedPricing;
 
 /**
@@ -15,13 +14,12 @@ final class Quoter
 {
     public function __construct(
         private readonly CachedPricing $pricing,
-        private readonly Limits $limits,
         private readonly Markup $markup,
     ) {}
 
     public function quote(string $prompt, string $quality, string $size, int $referenceImages): Quote
     {
-        $estimator = new CostEstimator($this->pricing->current(), $this->limits);
+        $estimator = new CostEstimator($this->pricing->current());
 
         $providerCost = $estimator->estimate($prompt, $quality, $size, $referenceImages);
 
