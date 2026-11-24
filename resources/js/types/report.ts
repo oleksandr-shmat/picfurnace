@@ -32,6 +32,13 @@ export type ReportLine = {
     balance: string | null;
 };
 
+export type TableColumn = {
+    key: string;
+    label: string;
+    align?: 'left' | 'right';
+    sortable?: boolean;
+};
+
 export type TableMeta = {
     total: number;
     page: number;
@@ -39,23 +46,25 @@ export type TableMeta = {
     perPage: number;
 };
 
-export type Metric = {
-    value: string | number | null;
-    /** A signed percentage against the period before, or null. */
-    change: string | null;
-};
+/** A signed percentage against the period before ("+12.5"), or null when there is none. */
+type Change = string | null;
+
+/** A figure in money, with its value for each day for the trend line. */
+type MoneyMetric = { value: string; change: Change; series: string[] };
 
 export type ReportMetrics = {
-    revenue: Metric & { series: string[] };
-    cost: Metric & { series: string[] };
-    profit: Metric & { margin: string | null; series: string[] };
-    generations: Metric & {
+    revenue: MoneyMetric;
+    cost: MoneyMetric;
+    profit: MoneyMetric & { margin: string | null };
+    generations: {
+        value: number;
+        change: Change;
         failed: number;
         successRate: string | null;
         series: number[];
     };
-    averagePrice: Metric;
-    credit: { sold: string; change: string | null; held: string };
+    averagePrice: { value: string | null; change: Change };
+    credit: { sold: string; change: Change; held: string };
 };
 
 export type ReportTotals = {

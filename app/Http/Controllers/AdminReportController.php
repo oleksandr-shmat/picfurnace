@@ -88,15 +88,6 @@ class AdminReportController extends Controller
         $previous = $previousPeriod === null ? null : $report->summary($previousPeriod, $user);
         $series = $report->series($period, $user, $now);
 
-        $money = fn (callable $of) => fn (Summary $summary) => $this->amount($of($summary));
-        $change = fn (callable $of) => $previous === null
-            ? null
-            : Summary::change($of($current)->getAmount(), $of($previous)->getAmount());
-
-        $charged = fn (Summary $summary) => $summary->charged;
-        $cost = fn (Summary $summary) => $summary->providerCost;
-        $profit = fn (Summary $summary) => $summary->profit();
-
         $average = $current->averagePrice();
         $previousAverage = $previous?->averagePrice();
 
@@ -104,22 +95,21 @@ class AdminReportController extends Controller
         $previousSold = $previousPeriod === null ? null : $report->creditSold($previousPeriod, $user);
 
         return [
-            'revenue' => [
-                'value' => $money($charged)($current),
-                'change' => $change($charged),
-                'series' => array_map(fn (ReportRow $point) => $this->amount($point->charged), $series),
-            ],
-            'cost' => [
-                'value' => $money($cost)($current),
-                'change' => $change($cost),
-                'series' => array_map(fn (ReportRow $point) => $this->amount($point->providerCost), $series),
-            ],
-            'profit' => [
-                'value' => $money($profit)($current),
-                'change' => $change($profit),
-                'margin' => $current->marginPercent(),
-                'series' => array_map(fn (ReportRow $point) => $this->amount($point->profit()), $series),
-            ],
+            'revenue' => $this->moneyMetric(
+                $current->charged,
+                $previous?->charged,
+                array_map(fn (ReportRow $point) => $point->charged, $series),
+            ),
+            'cost' => $this->moneyMetric(
+                $current->providerCost,
+                $previous?->providerCost,
+                array_map(fn (ReportRow $point) => $point->providerCost, $series),
+            ),
+            'profit' => $this->moneyMetric(
+                $current->profit(),
+                $previous?->profit(),
+                array_map(fn (ReportRow $point) => $point->profit(), $series),
+            ) + ['margin' => $current->marginPercent()],
             'generations' => [
                 'value' => $current->generations,
                 'change' => $previous === null ? null : Summary::change($current->generations, $previous->generations),
@@ -138,6 +128,22 @@ class AdminReportController extends Controller
                 'change' => $previousSold === null ? null : Summary::change($sold->getAmount(), $previousSold->getAmount()),
                 'held' => $this->amount($report->creditHeld($user)),
             ],
+        ];
+    }
+
+    /**
+     * A figure in money: its value, the change against the period before (null when there is
+     * none), and its value for each day for the trend line.
+     *
+     * @param  array<int, Money>  $daily
+     * @return array{value: string, change: ?string, series: list<string>}
+     */
+    private function moneyMetric(Money $value, ?Money $before, array $daily): array
+    {
+        return [
+            'value' => $this->amount($value),
+            'change' => $before === null ? null : Summary::change($value->getAmount(), $before->getAmount()),
+            'series' => array_map($this->amount(...), array_values($daily)),
         ];
     }
 
