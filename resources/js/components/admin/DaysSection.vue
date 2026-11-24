@@ -54,9 +54,7 @@ const amountOf: Record<string, (row: ReportLine) => string> = {
             <div>
                 <h2 class="text-lg font-semibold">By day</h2>
                 <p class="text-sm text-muted-foreground">
-                    A generation counts on the day it completed. The Pixelforge
-                    cost of a day should match <code>GET /v1/usage</code> for
-                    that day.
+                    A generation counts on the day it completed.
                 </p>
             </div>
             <Button variant="outline" size="sm" as-child>

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { cannotAfford, formatUsd, formatUsdRounded, toNano } from '@/lib/money';
+import {
+    cannotAfford,
+    formatUsd,
+    formatUsdFull,
+    formatUsdRounded,
+    toNano,
+} from '@/lib/money';
 
 it('drops zeros that carry no information but keeps at least four decimals', () => {
     expect(formatUsd('0.017000000')).toBe('$0.0170');
@@ -84,5 +90,25 @@ describe('formatUsdRounded', () => {
     it('keeps the sign', () => {
         expect(formatUsdRounded('-2.500000000')).toBe('-$2.5000');
         expect(formatUsdRounded('-0.017906250')).toBe('-$0.0179');
+    });
+});
+
+describe('formatUsdFull', () => {
+    it('always shows all nine decimals, so a column lines up', () => {
+        expect(formatUsdFull('0.017287500')).toBe('$0.017287500');
+        expect(formatUsdFull('12.5')).toBe('$12.500000000');
+        expect(formatUsdFull('3')).toBe('$3.000000000');
+        expect(formatUsdFull('0.000000000')).toBe('$0.000000000');
+    });
+
+    it('keeps the smallest unit and does not round', () => {
+        expect(formatUsdFull('0.000000001')).toBe('$0.000000001');
+        expect(formatUsdFull('1.297507500')).toBe('$1.297507500');
+        expect(formatUsdFull('9999999.999999999')).toBe('$9999999.999999999');
+    });
+
+    it('keeps the sign', () => {
+        expect(formatUsdFull('-2.5')).toBe('-$2.500000000');
+        expect(formatUsdFull('-0.000000001')).toBe('-$0.000000001');
     });
 });

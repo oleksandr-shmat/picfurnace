@@ -12,6 +12,19 @@ export function formatUsd(amount: string): string {
 }
 
 /**
+ * An exact amount with all nine decimals ("$0.017287500"), the way Pixelforge reports it: a column
+ * of them lines up and can be compared with `GET /v1/usage` digit by digit.
+ */
+export function formatUsdFull(amount: string): string {
+    const nano = toNano(amount);
+    const size = nano < 0n ? -nano : nano;
+    const whole = size / 1_000_000_000n;
+    const fraction = String(size % 1_000_000_000n).padStart(9, '0');
+
+    return `${nano < 0n ? '-' : ''}$${whole}.${fraction}`;
+}
+
+/**
  * An exact amount from the server as whole nanodollars, so two amounts can be compared without
  * floating point.
  */

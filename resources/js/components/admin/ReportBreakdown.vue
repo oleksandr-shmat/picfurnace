@@ -55,6 +55,7 @@ function share(line: ReportLine, lines: ReportLine[]): number {
                             <ReportMoney
                                 class="text-foreground"
                                 :amount="line.charged"
+                                short
                             />
                         </span>
                     </div>

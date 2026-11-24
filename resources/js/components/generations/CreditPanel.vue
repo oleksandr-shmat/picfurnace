@@ -3,9 +3,10 @@ import { router } from '@inertiajs/vue3';
 import { Wallet } from '@lucide/vue';
 import { computed, ref } from 'vue';
 import CreditPurchaseController from '@/actions/App/Http/Controllers/CreditPurchaseController';
+import PriceDetails from '@/components/generations/PriceDetails.vue';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { formatUsd, toNano } from '@/lib/money';
+import { formatUsdRounded, toNano } from '@/lib/money';
 
 const props = defineProps<{
     /** Exact decimal string, negative after a generation cost more than was held. */
@@ -39,12 +40,29 @@ function buy(pack: number) {
             <Wallet class="size-5 text-primary-ink" />
             <div>
                 <p class="text-sm text-muted-foreground">Your credit</p>
-                <p
+                <div
                     class="text-xl font-semibold tabular-nums"
                     :class="{ 'text-danger-text': isNegative }"
                 >
-                    {{ formatUsd(balance) }}
-                </p>
+                    <PriceDetails
+                        title="Your credit"
+                        :rows="[
+                            {
+                                label: 'Exact amount',
+                                amount: balance,
+                                strong: true,
+                            },
+                        ]"
+                    >
+                        {{ formatUsdRounded(balance) }}
+                        <template #note>
+                            <p class="text-xs text-muted-foreground">
+                                What you bought, minus what is charged and what
+                                is held for generations that are still running.
+                            </p>
+                        </template>
+                    </PriceDetails>
+                </div>
             </div>
         </div>
 
