@@ -25,6 +25,28 @@ export function toNano(amount: string): bigint {
 }
 
 /**
+ * A short form of an amount for where the exact one is too much: rounded half up to `decimals`
+ * decimals ("$0.0179"). An amount that is not zero but would round to zero is shown as "<$0.0001"
+ * instead of "$0.0000". Use `formatUsd` wherever the exact amount matters.
+ */
+export function formatUsdRounded(amount: string, decimals = 4): string {
+    const nano = toNano(amount);
+    const negative = nano < 0n;
+    const size = nano < 0n ? -nano : nano;
+    const unit = 10n ** BigInt(9 - decimals);
+    const rounded = (size + unit / 2n) / unit;
+
+    if (rounded === 0n && size > 0n) {
+        return `<$0.${'0'.repeat(decimals - 1)}1`;
+    }
+
+    const scale = 10n ** BigInt(decimals);
+    const fraction = String(rounded % scale).padStart(decimals, '0');
+
+    return `${negative ? '-' : ''}$${rounded / scale}.${fraction}`;
+}
+
+/**
  * True when the balance cannot cover the price: the server holds the maximum price of the
  * estimate before a generation starts.
  */

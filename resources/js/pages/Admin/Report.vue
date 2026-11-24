@@ -55,19 +55,19 @@ defineOptions({
             </Alert>
 
             <dl class="grid gap-4 sm:grid-cols-4">
-                <div class="rounded-xl border p-4">
+                <div class="rounded-xl border bg-card p-4 shadow-sm">
                     <dt class="text-sm text-muted-foreground">Generations</dt>
                     <dd class="text-xl font-semibold tabular-nums">
                         {{ total.generations }}
                     </dd>
                 </div>
-                <div class="rounded-xl border p-4">
+                <div class="rounded-xl border bg-card p-4 shadow-sm">
                     <dt class="text-sm text-muted-foreground">Charged</dt>
                     <dd class="text-xl font-semibold tabular-nums">
                         {{ formatUsd(total.charged) }}
                     </dd>
                 </div>
-                <div class="rounded-xl border p-4">
+                <div class="rounded-xl border bg-card p-4 shadow-sm">
                     <dt class="text-sm text-muted-foreground">
                         Pixelforge cost
                     </dt>
@@ -75,7 +75,7 @@ defineOptions({
                         {{ formatUsd(total.providerCost) }}
                     </dd>
                 </div>
-                <div class="rounded-xl border p-4">
+                <div class="rounded-xl border bg-card p-4 shadow-sm">
                     <dt class="text-sm text-muted-foreground">Profit</dt>
                     <dd class="text-xl font-semibold tabular-nums">
                         {{ formatUsd(total.profit) }}
@@ -99,7 +99,10 @@ defineOptions({
                 No generation has succeeded yet.
             </p>
 
-            <div v-else class="overflow-x-auto rounded-xl border">
+            <div
+                v-else
+                class="overflow-x-auto rounded-xl border bg-card shadow-sm"
+            >
                 <table class="w-full text-sm tabular-nums">
                     <thead class="border-b text-left text-muted-foreground">
                         <tr>
@@ -142,7 +145,7 @@ defineOptions({
         <section v-if="users.length > 0" class="space-y-3">
             <h2 class="text-lg font-semibold">Per user</h2>
 
-            <div class="overflow-x-auto rounded-xl border">
+            <div class="overflow-x-auto rounded-xl border bg-card shadow-sm">
                 <table class="w-full text-sm tabular-nums">
                     <thead class="border-b text-left text-muted-foreground">
                         <tr>

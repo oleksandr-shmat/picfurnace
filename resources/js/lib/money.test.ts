@@ -1,5 +1,5 @@
-import { expect, it } from 'vite-plus/test';
-import { cannotAfford, formatUsd, toNano } from '@/lib/money';
+import { describe, expect, it } from 'vite-plus/test';
+import { cannotAfford, formatUsd, formatUsdRounded, toNano } from '@/lib/money';
 
 it('drops zeros that carry no information but keeps at least four decimals', () => {
     expect(formatUsd('0.017000000')).toBe('$0.0170');
@@ -52,4 +52,37 @@ it('says the balance cannot cover a price only when it is below it', () => {
     expect(cannotAfford('5.000000000', '0.467343750')).toBe(false);
     expect(cannotAfford('0.000000000', '0.000000001')).toBe(true);
     expect(cannotAfford('-1.000000000', '0.000000001')).toBe(true);
+});
+
+describe('formatUsdRounded', () => {
+    it('rounds to four decimals by default', () => {
+        expect(formatUsdRounded('0.017906250')).toBe('$0.0179');
+        expect(formatUsdRounded('0.017287500')).toBe('$0.0173');
+        expect(formatUsdRounded('0.467343750')).toBe('$0.4673');
+        expect(formatUsdRounded('12.500000000')).toBe('$12.5000');
+        expect(formatUsdRounded('0.000000000')).toBe('$0.0000');
+    });
+
+    it('rounds half up, at the middle and not before it', () => {
+        expect(formatUsdRounded('0.017950000')).toBe('$0.0180');
+        expect(formatUsdRounded('0.017949999')).toBe('$0.0179');
+        expect(formatUsdRounded('0.000050000')).toBe('$0.0001');
+        expect(formatUsdRounded('0.999950000')).toBe('$1.0000');
+    });
+
+    it('does not show a price that is not zero as zero', () => {
+        expect(formatUsdRounded('0.000049999')).toBe('<$0.0001');
+        expect(formatUsdRounded('0.000000001')).toBe('<$0.0001');
+        expect(formatUsdRounded('0.000000001', 2)).toBe('<$0.01');
+    });
+
+    it('takes the number of decimals', () => {
+        expect(formatUsdRounded('0.072187500', 2)).toBe('$0.07');
+        expect(formatUsdRounded('0.072187500', 6)).toBe('$0.072188');
+    });
+
+    it('keeps the sign', () => {
+        expect(formatUsdRounded('-2.500000000')).toBe('-$2.5000');
+        expect(formatUsdRounded('-0.017906250')).toBe('-$0.0179');
+    });
 });

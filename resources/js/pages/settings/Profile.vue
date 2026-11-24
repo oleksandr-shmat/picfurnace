@@ -30,7 +30,9 @@ const user = computed(() => page.props.auth.user);
 
     <h1 class="sr-only">Profile settings</h1>
 
-    <div class="flex flex-col space-y-6">
+    <div
+        class="flex flex-col space-y-6 rounded-xl border bg-card p-6 shadow-sm"
+    >
         <Heading
             variant="small"
             title="Profile"

@@ -12,22 +12,32 @@ const tabs = [
 </script>
 
 <template>
+    <!-- A segmented control in the colours of the app: the chosen option lifts off the track and
+         its icon takes the amber accent. -->
     <div
-        class="inline-flex gap-1 rounded-lg bg-neutral-100 p-1 dark:bg-neutral-800"
+        class="inline-flex gap-1 rounded-lg border bg-muted p-1"
+        role="radiogroup"
+        aria-label="Colour theme"
     >
         <button
             v-for="{ value, Icon, label } in tabs"
             :key="value"
+            type="button"
+            role="radio"
+            :aria-checked="appearance === value"
             @click="updateAppearance(value)"
             :class="[
-                'flex items-center rounded-md px-3.5 py-1.5 transition-colors',
+                'flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm transition-colors outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
                 appearance === value
-                    ? 'bg-white shadow-xs dark:bg-neutral-700 dark:text-neutral-100'
-                    : 'text-neutral-500 hover:bg-neutral-200/60 hover:text-black dark:text-neutral-400 dark:hover:bg-neutral-700/60',
+                    ? 'bg-card font-medium text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground',
             ]"
         >
-            <component :is="Icon" class="-ml-1 h-4 w-4" />
-            <span class="ml-1.5 text-sm">{{ label }}</span>
+            <component
+                :is="Icon"
+                :class="['size-4', { 'text-primary': appearance === value }]"
+            />
+            {{ label }}
         </button>
     </div>
 </template>

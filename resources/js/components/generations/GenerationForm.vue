@@ -96,7 +96,7 @@ function submit() {
 
 <template>
     <form
-        class="grid gap-6 rounded-xl border p-5 lg:grid-cols-[1fr_20rem]"
+        class="grid gap-6 rounded-xl border bg-card p-5 text-card-foreground shadow-sm lg:grid-cols-[1fr_20rem]"
         @submit.prevent="submit"
     >
         <div class="space-y-5">

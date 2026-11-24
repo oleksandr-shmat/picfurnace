@@ -33,10 +33,10 @@ function buy(pack: number) {
 
 <template>
     <div
-        class="flex flex-col gap-3 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between"
+        class="flex flex-col gap-3 rounded-xl border bg-card p-4 text-card-foreground shadow-sm sm:flex-row sm:items-center sm:justify-between"
     >
         <div class="flex items-center gap-3">
-            <Wallet class="size-5 text-muted-foreground" />
+            <Wallet class="size-5 text-primary" />
             <div>
                 <p class="text-sm text-muted-foreground">Your credit</p>
                 <p

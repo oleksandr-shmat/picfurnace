@@ -4,10 +4,12 @@ import { Download, ImageOff, X } from '@lucide/vue';
 import { computed } from 'vue';
 import { toast } from 'vue-sonner';
 import GenerationController from '@/actions/App/Http/Controllers/GenerationController';
+import GenerationFurnace from '@/components/generations/GenerationFurnace.vue';
+import PriceDetails from '@/components/generations/PriceDetails.vue';
 import StatusBadge from '@/components/generations/StatusBadge.vue';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { formatUsd } from '@/lib/money';
+import { formatUsdRounded } from '@/lib/money';
 import type { Generation } from '@/types/generations';
 
 const props = defineProps<{
@@ -17,6 +19,17 @@ const props = defineProps<{
 
 // The picture area keeps the shape of the image, so the page does not jump when it arrives.
 const aspectRatio = computed(() => props.generation.size.replace('x', ' / '));
+
+// While it is waiting or being drawn the card shows the furnace; once finished it shows the result.
+const making = computed(() => {
+    const { status } = props.generation;
+
+    return status === 'pending' ||
+        status === 'queued' ||
+        status === 'processing'
+        ? status
+        : null;
+});
 
 const placeholder = computed(() => {
     const { status, image } = props.generation;
@@ -38,6 +51,23 @@ const placeholder = computed(() => {
     }
 
     return 'No image';
+});
+
+// The price that was shown before sending, short on the card and exact in the popover.
+const estimateRows = computed(() => {
+    const { min, expected, max } = props.generation.estimate;
+
+    return [
+        { label: 'Estimated, most likely', amount: expected },
+        { label: 'Estimated, lowest', amount: min },
+        { label: 'Estimated, highest', amount: max },
+    ];
+});
+
+const estimateRange = computed(() => {
+    const { min, max } = props.generation.estimate;
+
+    return `Estimated ${formatUsdRounded(min)} – ${formatUsdRounded(max)}`;
 });
 
 const dateTime = new Intl.DateTimeFormat(undefined, {
@@ -67,6 +97,11 @@ function cancel() {
                 :alt="generation.prompt"
                 loading="lazy"
                 class="size-full object-cover"
+            />
+            <GenerationFurnace
+                v-else-if="making"
+                :status="making"
+                :label="placeholder"
             />
             <div
                 v-else
@@ -109,11 +144,22 @@ function cancel() {
                     "
                 >
                     <p class="font-medium">
-                        Charged {{ formatUsd(generation.charged) }}
+                        <PriceDetails
+                            title="What you were charged"
+                            :rows="[
+                                {
+                                    label: 'Charged',
+                                    amount: generation.charged,
+                                    strong: true,
+                                },
+                                ...estimateRows,
+                            ]"
+                        >
+                            Charged {{ formatUsdRounded(generation.charged) }}
+                        </PriceDetails>
                     </p>
                     <p class="text-xs text-muted-foreground">
-                        Estimated {{ formatUsd(generation.estimate.min) }} –
-                        {{ formatUsd(generation.estimate.max) }}
+                        {{ estimateRange }}
                     </p>
                 </template>
                 <p
@@ -123,8 +169,12 @@ function cancel() {
                     Not charged
                 </p>
                 <p v-else class="text-muted-foreground">
-                    Estimated {{ formatUsd(generation.estimate.min) }} –
-                    {{ formatUsd(generation.estimate.max) }}
+                    <PriceDetails
+                        title="The price that was shown"
+                        :rows="estimateRows"
+                    >
+                        {{ estimateRange }}
+                    </PriceDetails>
                 </p>
             </div>
 

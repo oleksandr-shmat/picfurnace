@@ -29,7 +29,7 @@ defineOptions({
 
     <h1 class="sr-only">Security settings</h1>
 
-    <div class="space-y-6">
+    <div class="space-y-6 rounded-xl border bg-card p-6 shadow-sm">
         <Heading
             variant="small"
             title="Update password"

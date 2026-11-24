@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import PriceDetails from '@/components/generations/PriceDetails.vue';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatUsd } from '@/lib/money';
+import { formatUsdRounded } from '@/lib/money';
 import type { PriceRange } from '@/types/generations';
 
 defineProps<{
@@ -21,24 +22,41 @@ defineProps<{
             </p>
         </template>
 
-        <template v-else-if="estimate">
-            <p
+        <PriceDetails
+            v-else-if="estimate"
+            title="How the price is made up"
+            :rows="[
+                {
+                    label: 'Most likely',
+                    amount: estimate.expected,
+                    strong: true,
+                },
+                { label: 'Lowest', amount: estimate.min },
+                { label: 'Highest', amount: estimate.max },
+            ]"
+        >
+            <span
                 class="text-2xl font-semibold tabular-nums transition-opacity"
                 :class="{ 'opacity-50': state === 'loading' }"
             >
-                {{ formatUsd(estimate.min) }} – {{ formatUsd(estimate.max) }}
-            </p>
-            <p class="text-sm text-muted-foreground tabular-nums">
-                Most likely about {{ formatUsd(estimate.expected) }}
-            </p>
-        </template>
+                <span class="font-normal text-primary">≈</span>
+                {{ formatUsdRounded(estimate.expected) }}
+            </span>
 
-        <Skeleton v-else class="h-8 w-48" />
+            <template #note>
+                <p class="text-xs text-muted-foreground">
+                    The final price is based on what the generation actually
+                    used, normally within this range. The highest price is set
+                    aside while it runs, and what is not used is given back.
+                </p>
+            </template>
+        </PriceDetails>
+
+        <Skeleton v-else class="h-8 w-40" />
 
         <p class="text-xs text-muted-foreground">
-            Includes a {{ markupPercent }}% service fee. The final price is
-            based on what the generation actually used, normally within this
-            range. A generation that fails is free.
+            Includes a {{ markupPercent }}% service fee. A generation that fails
+            is free.
         </p>
     </div>
 </template>

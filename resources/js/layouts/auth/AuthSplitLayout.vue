@@ -15,11 +15,10 @@ const artSrc = '/images/login-art.webp';
 </script>
 
 <template>
-    <!-- The page is always dark: the picture needs it. The inner element gives the form an amber
-         accent only here; the rest of the app keeps its own colours. -->
-    <div class="dark bg-[#090605] text-foreground">
+    <!-- The page is always dark: the picture needs it. -->
+    <div class="dark bg-background text-foreground">
         <div
-            class="relative isolate grid min-h-svh overflow-hidden [--primary-foreground:oklch(0.16_0.02_60)] [--primary:oklch(0.78_0.16_65)] [--ring:oklch(0.78_0.16_65)] lg:grid-cols-2"
+            class="relative isolate grid min-h-svh overflow-hidden lg:grid-cols-2"
         >
             <!-- The geometry fills the whole page; the picture dissolves into it. -->
             <CursorGeometry />
@@ -35,7 +34,7 @@ const artSrc = '/images/login-art.webp';
                         fetchpriority="high"
                     />
                     <div
-                        class="absolute inset-0 bg-gradient-to-t from-[#090605]/90 via-transparent to-[#090605]/30"
+                        class="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-background/30"
                     />
                 </div>
 
@@ -62,7 +61,7 @@ const artSrc = '/images/login-art.webp';
                 class="relative z-10 flex items-center justify-center p-6 md:p-10 lg:col-start-2"
             >
                 <div
-                    class="relative w-full max-w-sm rounded-2xl border border-white/10 bg-black/40 p-8 shadow-2xl backdrop-blur-md"
+                    class="relative w-full max-w-sm rounded-2xl border border-white/10 bg-card/60 p-8 shadow-2xl backdrop-blur-md"
                 >
                     <div class="flex flex-col gap-8">
                         <div class="flex flex-col gap-4">
