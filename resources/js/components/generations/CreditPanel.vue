@@ -36,12 +36,12 @@ function buy(pack: number) {
         class="flex flex-col gap-3 rounded-xl border bg-card p-4 text-card-foreground shadow-sm sm:flex-row sm:items-center sm:justify-between"
     >
         <div class="flex items-center gap-3">
-            <Wallet class="size-5 text-primary" />
+            <Wallet class="size-5 text-primary-ink" />
             <div>
                 <p class="text-sm text-muted-foreground">Your credit</p>
                 <p
                     class="text-xl font-semibold tabular-nums"
-                    :class="{ 'text-red-600 dark:text-red-500': isNegative }"
+                    :class="{ 'text-danger-text': isNegative }"
                 >
                     {{ formatUsd(balance) }}
                 </p>

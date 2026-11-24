@@ -21,7 +21,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useEstimate } from '@/composables/useEstimate';
 import { qualityLabel, sizeLabel } from '@/lib/labels';
-import { cannotAfford, formatUsd } from '@/lib/money';
+import { cannotAfford, formatUsdRounded } from '@/lib/money';
 import { referenceProblems, usableReferences } from '@/lib/referenceImages';
 import type { FormOptions } from '@/types/generations';
 
@@ -115,7 +115,7 @@ function submit() {
                         class="ml-auto text-xs tabular-nums"
                         :class="
                             promptTooLong
-                                ? 'text-red-600 dark:text-red-500'
+                                ? 'text-danger-text'
                                 : 'text-muted-foreground'
                         "
                     >
@@ -187,10 +187,10 @@ function submit() {
 
             <Alert v-if="notEnoughCredit && estimate">
                 <AlertDescription>
-                    Not enough credit: up to {{ formatUsd(estimate.max) }} is
-                    set aside while a generation runs, and you have
-                    {{ formatUsd(balance) }}. Add credit above. Whatever is not
-                    used is given back.
+                    Your credit is too low for this one. It can cost up to
+                    {{ formatUsdRounded(estimate.max) }} and you have
+                    {{ formatUsdRounded(balance) }}. Add credit above to
+                    continue.
                 </AlertDescription>
             </Alert>
 
@@ -201,10 +201,9 @@ function submit() {
             </Button>
 
             <p class="text-xs text-muted-foreground">
-                A generation waits in line first and can be cancelled while it
-                waits. Once it has been sent to the image service it cannot be
-                cancelled: if it succeeds you pay the final price, if it fails
-                you pay nothing.
+                It joins the queue and starts as soon as there is a free slot.
+                You can cancel it while it waits, but not once it has started.
+                You pay only if it succeeds; if it fails, it is free.
             </p>
         </div>
     </form>

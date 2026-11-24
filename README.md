@@ -84,7 +84,13 @@ The credit packs of "Add credit" (5, 10 and 20 dollars) are `credit_packs` in `c
 - **Starting credit.** The seeder gives the demo user $5 once (it checks for an existing `grant`, so each deploy can seed again). The admin gets none.
 - **History before the ledger.** A migration writes a `charge` line for every succeeded generation that was charged before the ledger existed, so the ledger and the generations agree from the first day. A generation that was already running at that moment has no hold: it is only charged.
 - **Fake payments.** "Add credit" only adds a `purchase` line, for the packs in the config. No payment provider is involved and the page says so. There is no manual top-up by an admin: Add credit already covers it.
-- **Report.** `/admin/report` (admin only) adds up succeeded generations per UTC day of completion (like Pixelforge's own usage) and per user, including users who left: charged, provider cost and profit. It also checks that the charges in the ledger equal the charges written on the generations, and shows an alert if they do not. Comparing a day's provider cost with `GET /v1/usage` is a manual check.
+- **Report.** `/admin/report` (admin only) is the view of what the service earns. All of it follows the filters in the URL, so a view can be shared as a link:
+    - **Period:** today, 7 or 30 days, this month, last month, all time, or two dates. Days are **UTC** and a generation counts on the day it completed, like Pixelforge's own usage, so a day's provider cost can be compared with `GET /v1/usage` (that comparison is manual). Optionally one user.
+    - **Figures** with the change against the period of the same length right before it and a small trend line: revenue, Pixelforge cost, profit with the margin, generations with the success rate (a generation the user cancelled before it was sent is not a failure), average price, credit sold and credit users still hold. Money is rounded where it is shown and exact on click.
+    - **What is bought:** revenue per quality and per size.
+    - **Days and users** in tables that are paged on the server, sortable, with a total for the period, a search in the users table and a click on a name to look at that user only. Users who left stay in the history.
+    - **CSV export** of both tables with the same filters, all rows (names starting with `=`, `+`, `-` or `@` are quoted so a spreadsheet does not run them as formulas).
+    - **Ledger check:** the charges in the ledger must equal the charges written on the generations, whatever the filters; if they do not, an alert shows both sums.
 
 ## Webhooks: duplicated, late, lost
 
@@ -134,9 +140,9 @@ app/
 
 ## Quality: what the numbers mean
 
-- **Line coverage 98.6%** (PCOV). It says a line ran, not that anything was checked.
+- **Line coverage 99.1%** (PCOV). It says a line ran, not that anything was checked.
 - **Mutation score about 92%** over the whole backend: the code is changed automatically (`>` to `>=`, a removed call) and the tests must notice. The survivors are constants and equivalent changes, reviewed by hand.
-- **The test count is not a measure.** The suite reports about 600 test cases, but they are roughly 300 `it()` blocks; most of the rest are rows of datasets (one rule, many inputs, for example every malformed money string). I tried to find tests that add nothing: each test was left out in turn and the mutation run repeated. Looked at one class at a time, many tests seemed redundant; with all of them left out together the mutation score fell below its limit and 21 new mutants survived. So the suite is not padded in the sense that matters, and I kept it as it is.
+- **The test count is not a measure.** The suite reports about 760 test cases, but they are roughly 350 `it()` blocks; most of the rest are rows of datasets (one rule, many inputs, for example every malformed money string). I tried to find tests that add nothing: each test was left out in turn and the mutation run repeated. Looked at one class at a time, many tests seemed redundant; with all of them left out together the mutation score fell below its limit and 21 new mutants survived. So the suite is not padded in the sense that matters, and I kept it as it is.
 - Recorded Pixelforge responses are used as fixtures, and expected numbers in tests are computed independently of the code.
 
 **Not covered, said plainly:** there are no browser tests (the frontend has unit tests for its plain logic, lint and types, plus manual checks); concurrency is covered by two targeted tests, not a general harness, and two simultaneous submits against one balance are protected by the user-row lock but not tested with two processes; Pixelforge itself was checked by hand against the live API; PCOV has no branch coverage.

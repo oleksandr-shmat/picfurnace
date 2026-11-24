@@ -35,7 +35,10 @@ const tabs = [
         >
             <component
                 :is="Icon"
-                :class="['size-4', { 'text-primary': appearance === value }]"
+                :class="[
+                    'size-4',
+                    { 'text-primary-ink': appearance === value },
+                ]"
             />
             {{ label }}
         </button>

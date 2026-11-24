@@ -132,7 +132,7 @@ function cancel() {
 
             <p
                 v-if="generation.failureMessage && !generation.cancelled"
-                class="text-sm text-red-600 dark:text-red-500"
+                class="text-sm text-danger-text"
             >
                 {{ generation.failureMessage }}
             </p>

@@ -39,15 +39,16 @@ defineProps<{
                 class="text-2xl font-semibold tabular-nums transition-opacity"
                 :class="{ 'opacity-50': state === 'loading' }"
             >
-                <span class="font-normal text-primary">≈</span>
+                <span class="font-normal text-primary-ink">≈</span>
                 {{ formatUsdRounded(estimate.expected) }}
             </span>
 
             <template #note>
                 <p class="text-xs text-muted-foreground">
-                    The final price is based on what the generation actually
-                    used, normally within this range. The highest price is set
-                    aside while it runs, and what is not used is given back.
+                    You pay for what the generation actually uses, normally
+                    within this range. While it is being made, the highest price
+                    is held from your credit and whatever is not used is
+                    released.
                 </p>
             </template>
         </PriceDetails>
@@ -55,8 +56,7 @@ defineProps<{
         <Skeleton v-else class="h-8 w-40" />
 
         <p class="text-xs text-muted-foreground">
-            Includes a {{ markupPercent }}% service fee. A generation that fails
-            is free.
+            Includes a {{ markupPercent }}% service fee.
         </p>
     </div>
 </template>
