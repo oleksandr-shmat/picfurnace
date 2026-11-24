@@ -58,7 +58,11 @@ export function useEstimate(input: () => EstimateInput) {
         input,
         () => {
             state.value = 'loading';
-            void request();
+
+            // Server-side rendering has no XMLHttpRequest and no user typing: only the browser asks.
+            if (!import.meta.env.SSR) {
+                void request();
+            }
         },
         { deep: true, immediate: true },
     );

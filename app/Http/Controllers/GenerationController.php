@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Billing\Billing;
 use App\Billing\InsufficientBalance;
 use App\Generations\GenerationLifecycle;
 use App\Generations\GenerationSubmitter;
@@ -11,6 +12,7 @@ use App\Generations\TooManyGenerations;
 use App\Http\Requests\Generations\StoreGenerationRequest;
 use App\Http\Resources\GenerationResource;
 use App\Models\Generation;
+use App\Money\Usd;
 use App\Pixelforge\Api\Limits;
 use App\Pixelforge\Client\CachedPricing;
 use App\Pixelforge\Client\RetryLater;
@@ -32,7 +34,7 @@ class GenerationController extends Controller
     /**
      * The page: the form to create a generation and the user's own generations below it.
      */
-    public function index(Request $request, CachedPricing $pricing, Limits $limits, Markup $markup): Response
+    public function index(Request $request, CachedPricing $pricing, Limits $limits, Markup $markup, Billing $billing): Response
     {
         $listSize = min(max((int) $request->query('limit', self::DEFAULT_LIST_SIZE), 1), self::MAX_LIST_SIZE);
 
@@ -47,6 +49,8 @@ class GenerationController extends Controller
             'generations' => GenerationResource::collection($generations->take($listSize))->resolve(),
             'hasMore' => $generations->count() > $listSize,
             'imageRetentionDays' => config('images.retention_days'),
+            'balance' => Usd::format($billing->balance($request->user())),
+            'creditPacks' => config('billing.credit_packs'),
             // Only needed for the first visit: the polling reloads ask for `generations` alone.
             'options' => fn () => $this->formOptions($pricing, $limits, $markup),
         ]);

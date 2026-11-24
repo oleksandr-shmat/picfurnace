@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\Role;
+use App\Models\LedgerEntry;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -32,6 +33,17 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
+    }
+
+    /**
+     * A user with credit in the ledger ($5 by default), who can submit generations.
+     */
+    public function withCredit(int $nano = 5_000_000_000): static
+    {
+        return $this->afterCreating(fn (User $user) => LedgerEntry::factory()->create([
+            'user_id' => $user->id,
+            'amount_nano' => $nano,
+        ]));
     }
 
     public function admin(): static

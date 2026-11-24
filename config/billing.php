@@ -19,4 +19,16 @@ return [
 
     'markup_percent' => (int) env('BILLING_MARKUP_PERCENT', 25),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Credit packs
+    |--------------------------------------------------------------------------
+    |
+    | Whole dollars a user can add to their balance. The payment is fake: this is a
+    | demo, no money moves anywhere.
+    |
+    */
+
+    'credit_packs' => [5, 10, 20],
+
 ];

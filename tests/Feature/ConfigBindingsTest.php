@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Billing\Billing;
-use App\Billing\NoBalanceBilling;
+use App\Billing\LedgerBilling;
 use App\Pixelforge\Api\Limits;
 use App\Pixelforge\Client\PixelforgeClient;
 use App\Quoting\Markup;
@@ -28,7 +28,7 @@ it('takes the request limits from config', function () {
     expect($limits->maxReferenceImages)->toBe(2)->and($limits->maxPromptCharacters)->toBe(100);
 });
 
-it('uses the balance-free billing and a client built from config', function () {
-    expect(app(Billing::class))->toBeInstanceOf(NoBalanceBilling::class)
+it('uses the ledger billing and a client built from config', function () {
+    expect(app(Billing::class))->toBeInstanceOf(LedgerBilling::class)
         ->and(app(PixelforgeClient::class))->toBeInstanceOf(PixelforgeClient::class);
 });

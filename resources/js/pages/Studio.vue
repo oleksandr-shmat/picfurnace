@@ -2,6 +2,7 @@
 import { Head, router, usePoll } from '@inertiajs/vue3';
 import { TriangleAlert } from '@lucide/vue';
 import { computed, watch } from 'vue';
+import CreditPanel from '@/components/generations/CreditPanel.vue';
 import GenerationCard from '@/components/generations/GenerationCard.vue';
 import GenerationForm from '@/components/generations/GenerationForm.vue';
 import Heading from '@/components/Heading.vue';
@@ -17,6 +18,10 @@ const props = defineProps<{
     generations: Generation[];
     hasMore: boolean;
     imageRetentionDays: number;
+    /** What the user can spend, as an exact decimal string. Negative after an overrun. */
+    balance: string;
+    /** Whole dollars of each credit pack the user can add. */
+    creditPacks: number[];
     /** Null when Pixelforge could not be asked for its pricing. */
     options: FormOptions | null;
 }>();
@@ -38,7 +43,7 @@ const unfinishedCount = computed(
 // shared by all users, and its webhooks already update our database.
 const poll = usePoll(
     3000,
-    { only: ['generations', 'hasMore'] },
+    { only: ['generations', 'hasMore', 'balance'] },
     { autoStart: false },
 );
 
@@ -53,7 +58,7 @@ function showMore() {
         }),
         {},
         {
-            only: ['generations', 'hasMore'],
+            only: ['generations', 'hasMore', 'balance'],
             preserveScroll: true,
             preserveState: true,
             replace: true,
@@ -76,9 +81,12 @@ function retryOptions() {
                 description="Describe an image and see what it will cost before you send it."
             />
 
+            <CreditPanel :balance="balance" :packs="creditPacks" />
+
             <GenerationForm
                 v-if="options"
                 :options="options"
+                :balance="balance"
                 :unfinished-count="unfinishedCount"
             />
 

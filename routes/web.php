@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AdminReportController;
+use App\Http\Controllers\CreditPurchaseController;
 use App\Http\Controllers\EstimateController;
 use App\Http\Controllers\GenerationController;
 use App\Http\Controllers\GenerationImageController;
@@ -14,6 +16,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('generations', [GenerationController::class, 'store'])->name('generations.store');
     Route::delete('generations/{generation:uuid}', [GenerationController::class, 'destroy'])->name('generations.destroy');
     Route::get('generations/{generation:uuid}/image', GenerationImageController::class)->name('generations.image');
+    Route::get('admin/report', AdminReportController::class)->middleware('can:view-admin-report')->name('admin.report');
+
+    Route::post('credits', CreditPurchaseController::class)->name('credits.store');
     Route::post('generations/estimate', EstimateController::class)->name('generations.estimate');
 });
 

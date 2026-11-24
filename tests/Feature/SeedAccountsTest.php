@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Billing\LedgerEntryType;
 use App\Enums\Role;
+use App\Models\Generation;
+use App\Models\LedgerEntry;
 use App\Models\User;
 use Database\Seeders\DatabaseSeeder;
 
@@ -77,3 +80,46 @@ it('refuses to create accounts with the default password in production', functio
     'not set' => [null],
     'set to nothing' => [''],
 ]);
+
+it('gives the demo user the starting credit and the admin none', function () {
+    $this->seed(DatabaseSeeder::class);
+
+    $grant = LedgerEntry::sole();
+    expect($grant->type)->toBe(LedgerEntryType::Grant)
+        ->and($grant->user_id)->toBe(User::where('email', 'demo@example.com')->sole()->id)
+        ->and($grant->amount_nano)->toBe(5_000_000_000)
+        ->and($grant->generation_id)->toBeNull();
+});
+
+it('takes the starting credit from the configuration', function () {
+    config(['accounts.demo.credit' => '2.50']);
+
+    $this->seed(DatabaseSeeder::class);
+
+    expect(LedgerEntry::sole()->amount_nano)->toBe(2_500_000_000);
+});
+
+it('grants the starting credit only once, however often it is seeded (every deploy seeds)', function () {
+    $this->seed(DatabaseSeeder::class);
+    $this->seed(DatabaseSeeder::class);
+
+    expect(LedgerEntry::count())->toBe(1);
+});
+
+it('does not grant again to an account that was deleted and brought back', function () {
+    $this->seed(DatabaseSeeder::class);
+    User::where('email', 'demo@example.com')->sole()->delete();
+
+    $this->seed(DatabaseSeeder::class);
+
+    expect(LedgerEntry::count())->toBe(1);
+});
+
+it('grants the credit to a demo user that already has history from before the ledger', function () {
+    $demo = User::factory()->create(['email' => 'demo@example.com']);
+    LedgerEntry::factory()->charge(Generation::factory()->succeeded()->create(['user_id' => $demo->id]))->create();
+
+    $this->seed(DatabaseSeeder::class);
+
+    expect(LedgerEntry::where('type', LedgerEntryType::Grant->value)->sole()->user_id)->toBe($demo->id);
+});

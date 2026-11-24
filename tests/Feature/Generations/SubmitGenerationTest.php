@@ -33,7 +33,7 @@ beforeEach(function () {
     Http::fake(['*/pricing' => Http::response(pixelforgeFixture('pricing'))]);
     Cache::flush();
 
-    $this->user = User::factory()->create();
+    $this->user = User::factory()->withCredit()->create();
 });
 
 /** The form of the documented worst case: 400 characters, high quality, large size, two references. */

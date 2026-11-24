@@ -21,6 +21,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { useEstimate } from '@/composables/useEstimate';
 import { qualityLabel, sizeLabel } from '@/lib/labels';
+import { cannotAfford, formatUsd } from '@/lib/money';
 import { referenceProblems, usableReferences } from '@/lib/referenceImages';
 import type { FormOptions } from '@/types/generations';
 
@@ -28,6 +29,8 @@ const props = defineProps<{
     options: FormOptions;
     /** How many of the user's generations are waiting or running. */
     unfinishedCount: number;
+    /** What the user can spend, as an exact decimal string. */
+    balance: string;
 }>();
 
 const form = useForm({
@@ -55,10 +58,19 @@ const queueIsFull = computed(
     () => props.unfinishedCount >= props.options.maxUnfinishedGenerations,
 );
 
+// The server sets aside the maximum price before a generation starts, so that is what the
+// balance must cover.
+const notEnoughCredit = computed(
+    () =>
+        estimate.value !== null &&
+        cannotAfford(props.balance, estimate.value.max),
+);
+
 const canSubmit = computed(
     () =>
         !form.processing &&
         !queueIsFull.value &&
+        !notEnoughCredit.value &&
         promptLength.value > 0 &&
         !promptTooLong.value &&
         referenceProblems(form.reference_images).every(
@@ -170,6 +182,15 @@ function submit() {
                 <AlertDescription>
                     You have {{ unfinishedCount }} generations in progress. You
                     can start another as soon as one of them finishes.
+                </AlertDescription>
+            </Alert>
+
+            <Alert v-if="notEnoughCredit && estimate">
+                <AlertDescription>
+                    Not enough credit: up to {{ formatUsd(estimate.max) }} is
+                    set aside while a generation runs, and you have
+                    {{ formatUsd(balance) }}. Add credit above. Whatever is not
+                    used is given back.
                 </AlertDescription>
             </Alert>
 

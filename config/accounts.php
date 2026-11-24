@@ -13,6 +13,8 @@ return [
     'demo' => [
         'email' => env('DEMO_USER_EMAIL', 'demo@example.com'),
         'password' => env('DEMO_USER_PASSWORD'),
+        // Credit given once, in dollars, when the demo account is first seeded.
+        'credit' => env('DEMO_USER_CREDIT', '5.00'),
     ],
 
     'admin' => [

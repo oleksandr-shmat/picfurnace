@@ -6,7 +6,7 @@ Laravel 13, Vue 3, Inertia 3, PostgreSQL. The price a user pays is the Pixelforg
 
 - **Deployed:** https://picfurnace.aleksthegreat.dev
 - **Demo account:** `demo@example.com`, password in the submission e-mail (locally `password`)
-- **Admin account:** `admin@example.com` (only used by the optional parts, see [Roadmap](#roadmap))
+- **Admin account:** `admin@example.com`, password in the submission e-mail (locally `password`). It sees the [report](#balances-and-credit) page
 
 ## What it does
 
@@ -14,6 +14,8 @@ Laravel 13, Vue 3, Inertia 3, PostgreSQL. The price a user pays is the Pixelforg
 2. **Own queue in front of Pixelforge.** A generation waits in our queue, can be cancelled for free while it waits, and is sent when a slot is free.
 3. **Live status.** The page polls our own database (never Pixelforge) while something is unfinished.
 4. **Exact price and image.** The estimate and the final price are shown side by side. Images are kept for 14 days on our own storage (Pixelforge links die after 24 hours) and the page says until when.
+5. **Credit.** Every user has a balance. A generation sets aside its maximum price when it is sent and gives back what it did not use. The form warns and blocks sending when the balance is too low. "Add $5 / $10 / $20" adds demo credit (no real payment).
+6. **Admin report.** What users were charged, what Pixelforge billed us and the profit, per UTC day and per user.
 
 ## Run it locally
 
@@ -62,6 +64,9 @@ CI (`.github/workflows/tests.yml`) runs all of them against a PostgreSQL service
 | `PIXELFORGE_MAX_CONCURRENT_GENERATIONS`           | Pixelforge allows 3 at once for the whole account                    | 3         |
 | `IMAGE_DISK`, `IMAGE_RETENTION_DAYS`              | Where images are copied, and for how long                            | local, 14 |
 | `DEMO_USER_PASSWORD`, `ADMIN_PASSWORD`            | Seeded accounts. Required in production                              | —         |
+| `DEMO_USER_CREDIT`                                | Credit in dollars the demo user gets once, when first seeded         | 5.00      |
+
+The credit packs of "Add credit" (5, 10 and 20 dollars) are `credit_packs` in `config/billing.php`.
 
 ## How money is handled
 
@@ -70,6 +75,16 @@ CI (`.github/workflows/tests.yml`) runs all of them against a PostgreSQL service
 - **Price** = cost + markup, computed as `cost x (100 + percent) / 100` in integers with one half-up rounding, so it is at most half a nanodollar from the exact price. The markup percent is **stored on every generation**, so the estimate and the final charge use the same percent even if the config changes later.
 - **Only a succeeded generation is charged**, from the `usage` and `rates` of the result. Rates are fixed per generation by Pixelforge, so later price changes do not matter.
 - **Verified against the provider.** The 12 generations recorded during development add up to exactly what `GET /v1/usage` reported (`1.297507500`).
+
+## Balances and credit
+
+- **Append-only ledger.** `credit_ledger` has one line per money movement: `grant` (starting credit), `purchase` (Add credit), `hold`, `hold_release` and `charge`. Amounts are signed (money in is positive). A **balance is the sum** of a user's lines; there is no balance column that could drift. The database refuses to change or delete a line (trigger), checks the sign of every type, and allows each generation at most one `hold`, one `hold_release` and one `charge` (unique key), so a replayed webhook cannot move money twice.
+- **Reserve, then settle.** Sending a generation holds the **maximum price of its estimate**, inside the same transaction and user-row lock that checks the per-user limit. If the balance does not cover it, nothing is created. When the generation ends, the hold is given back and a success is charged the real price; a failure or a cancellation costs nothing. The shown balance is "credit minus what is held".
+- **Overrun.** The estimate range is a forecast, not a promise. If the real price is above the hold, the **full real price is charged** and the line is flagged `overrun`. The balance may go **below zero**; a negative balance cannot hold anything, so the user cannot start a new generation until they add credit. The alternative, capping the charge at the hold, would make us pay the difference to Pixelforge.
+- **Starting credit.** The seeder gives the demo user $5 once (it checks for an existing `grant`, so each deploy can seed again). The admin gets none.
+- **History before the ledger.** A migration writes a `charge` line for every succeeded generation that was charged before the ledger existed, so the ledger and the generations agree from the first day. A generation that was already running at that moment has no hold: it is only charged.
+- **Fake payments.** "Add credit" only adds a `purchase` line, for the packs in the config. No payment provider is involved and the page says so. There is no manual top-up by an admin: Add credit already covers it.
+- **Report.** `/admin/report` (admin only) adds up succeeded generations per UTC day of completion (like Pixelforge's own usage) and per user, including users who left: charged, provider cost and profit. It also checks that the charges in the ledger equal the charges written on the generations, and shows an alert if they do not. Comparing a day's provider cost with `GET /v1/usage` is a manual check.
 
 ## Webhooks: duplicated, late, lost
 
@@ -95,7 +110,8 @@ app/
     Api/          Normalisation of API responses: the only code that touches raw JSON
     Webhook/      Signature check, event parsing
   Quoting/        Estimate of the cost, markup, the price shown before sending
-  Billing/        The seam for money movement (reserve / settle / release)
+  Billing/        The seam for money movement (balance / add credit / reserve / settle / release) and its ledger implementation
+  Admin/          The profit report
   Generations/    Submit, dispatch, lifecycle (status + charge), reconcile, images, webhook handling
   Jobs/           DispatchGenerationsJob
   Http, Console, Models, Policies, ...
@@ -118,11 +134,11 @@ app/
 
 ## Quality: what the numbers mean
 
-- **Line coverage 98.7%** (PCOV). It says a line ran, not that anything was checked.
+- **Line coverage 98.6%** (PCOV). It says a line ran, not that anything was checked.
 - **Mutation score about 92%** over the whole backend: the code is changed automatically (`>` to `>=`, a removed call) and the tests must notice. The survivors are constants and equivalent changes, reviewed by hand.
 - Recorded Pixelforge responses are used as fixtures, and expected numbers in tests are computed independently of the code.
 
-**Not covered, said plainly:** there are no browser tests (the frontend has unit tests for its plain logic, lint and types, plus manual checks); concurrency is covered by two targeted tests, not a general harness; Pixelforge itself was checked by hand against the live API; PCOV has no branch coverage.
+**Not covered, said plainly:** there are no browser tests (the frontend has unit tests for its plain logic, lint and types, plus manual checks); concurrency is covered by two targeted tests, not a general harness, and two simultaneous submits against one balance are protected by the user-row lock but not tested with two processes; Pixelforge itself was checked by hand against the live API; PCOV has no branch coverage.
 
 ## Deploying
 
@@ -149,9 +165,8 @@ Images are copied to a Docker volume (the disk of the server), so no object stor
 
 **Trade-offs.** The image is built on the server, so there is no registry to manage, at the price of a slower deploy and a build that needs swap on a 2 GB machine. A deploy restarts the containers, so for a few seconds the site is not available: this is accepted for a single small server. The database is not replicated; a daily cron job runs `docker/backup.sh` (`pg_dump`, the last 7 dumps are kept), but the dumps lie on the same server, so they protect from a mistake and not from losing the server.
 
-## Roadmap
+## Not built
 
-The core was built so these plug in without rewrites:
-
-1. **Balances.** An append-only credit ledger, a fake "Buy credits", reserve of the maximum estimate and refusal when the user cannot pay. Only the `Billing` implementation changes (`NoBalanceBilling` today); the generation flow already calls `reserve`, `settle` and `release`.
-2. **Admin report.** Per UTC day and per user: charged, provider cost, profit; provider cost reconciled with `GET /v1/usage`.
+- **Real payments.** "Add credit" is a demo. A payment provider would replace only `Billing::addCredit` and add its own webhook.
+- **Automatic reconciliation with `GET /v1/usage`.** The report shows the numbers to compare; the comparison itself is manual.
+- **Registration and password reset.** Accounts come from the seeder, on purpose.

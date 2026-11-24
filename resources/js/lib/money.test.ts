@@ -1,5 +1,5 @@
 import { expect, it } from 'vite-plus/test';
-import { formatUsd } from '@/lib/money';
+import { cannotAfford, formatUsd, toNano } from '@/lib/money';
 
 it('drops zeros that carry no information but keeps at least four decimals', () => {
     expect(formatUsd('0.017000000')).toBe('$0.0170');
@@ -30,4 +30,26 @@ it('never changes the amount: nothing is rounded', () => {
 
         expect(Number(formatUsd(exact).slice(1))).toBe(Number(exact));
     }
+});
+
+it('keeps the sign of a negative amount', () => {
+    expect(formatUsd('-2.500000000')).toBe('-$2.5000');
+    expect(formatUsd('-0.000000001')).toBe('-$0.000000001');
+});
+
+it('counts an amount in whole nanodollars', () => {
+    expect(toNano('5.000000000')).toBe(5_000_000_000n);
+    expect(toNano('0.017287500')).toBe(17_287_500n);
+    expect(toNano('0.000000001')).toBe(1n);
+    expect(toNano('3')).toBe(3_000_000_000n);
+    expect(toNano('-2.500000000')).toBe(-2_500_000_000n);
+    expect(toNano('-0.000000001')).toBe(-1n);
+});
+
+it('says the balance cannot cover a price only when it is below it', () => {
+    expect(cannotAfford('0.467343749', '0.467343750')).toBe(true);
+    expect(cannotAfford('0.467343750', '0.467343750')).toBe(false);
+    expect(cannotAfford('5.000000000', '0.467343750')).toBe(false);
+    expect(cannotAfford('0.000000000', '0.000000001')).toBe(true);
+    expect(cannotAfford('-1.000000000', '0.000000001')).toBe(true);
 });

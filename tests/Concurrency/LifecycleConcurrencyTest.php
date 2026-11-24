@@ -25,6 +25,8 @@ beforeEach(function () {
 
 afterEach(function () {
     DB::rollBack();
+    // The ledger refuses DELETE (it is append-only); TRUNCATE is the way to clear committed test rows.
+    DB::statement('TRUNCATE credit_ledger');
     Generation::query()->delete();
     User::withTrashed()->forceDelete();
 });

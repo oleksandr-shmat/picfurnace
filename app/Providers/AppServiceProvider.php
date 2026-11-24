@@ -3,12 +3,13 @@
 namespace App\Providers;
 
 use App\Billing\Billing;
-use App\Billing\NoBalanceBilling;
+use App\Billing\LedgerBilling;
 use App\Generations\DispatchPause;
 use App\Generations\GenerationDispatcher;
 use App\Generations\GenerationLifecycle;
 use App\Generations\GenerationSubmitter;
 use App\Generations\Images\ImageArchive;
+use App\Models\User;
 use App\Pixelforge\Api\Limits;
 use App\Pixelforge\Client\CachedPricing;
 use App\Pixelforge\Client\PixelforgeClient;
@@ -18,6 +19,7 @@ use App\Quoting\Quoter;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -41,7 +43,7 @@ class AppServiceProvider extends ServiceProvider
             config('pixelforge.pricing_fresh_seconds'),
             config('pixelforge.pricing_stale_seconds'),
         ));
-        $this->app->singleton(Billing::class, NoBalanceBilling::class);
+        $this->app->singleton(Billing::class, LedgerBilling::class);
         $this->app->singleton(GenerationDispatcher::class, fn ($app) => new GenerationDispatcher(
             $app->make(PixelforgeClient::class),
             $app->make(GenerationLifecycle::class),
@@ -64,6 +66,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+
+        Gate::define('view-admin-report', fn (User $user) => $user->isAdmin());
     }
 
     /**
