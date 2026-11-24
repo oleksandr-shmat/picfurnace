@@ -15,6 +15,10 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
+                // The sign-in page: the wordmark and the line next to the picture.
+                bunny('Manrope', {
+                    weights: [300, 500, 700],
+                }),
             ],
         }),
         inertia(),

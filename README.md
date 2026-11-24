@@ -136,6 +136,7 @@ app/
 
 - **Line coverage 98.6%** (PCOV). It says a line ran, not that anything was checked.
 - **Mutation score about 92%** over the whole backend: the code is changed automatically (`>` to `>=`, a removed call) and the tests must notice. The survivors are constants and equivalent changes, reviewed by hand.
+- **The test count is not a measure.** The suite reports about 600 test cases, but they are roughly 300 `it()` blocks; most of the rest are rows of datasets (one rule, many inputs, for example every malformed money string). I tried to find tests that add nothing: each test was left out in turn and the mutation run repeated. Looked at one class at a time, many tests seemed redundant; with all of them left out together the mutation score fell below its limit and 21 new mutants survived. So the suite is not padded in the sense that matters, and I kept it as it is.
 - Recorded Pixelforge responses are used as fixtures, and expected numbers in tests are computed independently of the code.
 
 **Not covered, said plainly:** there are no browser tests (the frontend has unit tests for its plain logic, lint and types, plus manual checks); concurrency is covered by two targeted tests, not a general harness, and two simultaneous submits against one balance are protected by the user-row lock but not tested with two processes; Pixelforge itself was checked by hand against the live API; PCOV has no branch coverage.
