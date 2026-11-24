@@ -81,7 +81,7 @@ class GenerationController extends Controller
         Gate::authorize('cancel', $generation);
 
         if (! $lifecycle->cancel($generation)) {
-            throw ValidationException::withMessages(['generation' => 'This generation has already been sent and can no longer be cancelled.']);
+            throw ValidationException::withMessages(['generation' => 'It has just started, so it can no longer be cancelled. You pay only if it succeeds.']);
         }
 
         return back();

@@ -218,7 +218,7 @@ it('refuses to cancel a generation that was already sent', function () {
     $generation = Generation::factory()->create(['user_id' => $this->user->id, 'claimed_at' => now()]);
 
     $this->actingAs($this->user)->delete(route('generations.destroy', $generation->uuid))
-        ->assertSessionHasErrors(['generation' => 'This generation has already been sent and can no longer be cancelled.']);
+        ->assertSessionHasErrors(['generation' => 'It has just started, so it can no longer be cancelled. You pay only if it succeeds.']);
 
     expect($generation->refresh()->status)->toBe(GenerationStatus::Pending);
 });

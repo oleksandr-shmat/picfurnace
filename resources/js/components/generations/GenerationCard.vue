@@ -83,6 +83,10 @@ function cancel() {
             toast.error(
                 errors.generation ?? 'This generation cannot be cancelled.',
             );
+
+            // It was sent in the meantime: show its real state now instead of at the next poll, so
+            // the Cancel button goes away at once.
+            router.reload({ only: ['generations', 'hasMore', 'balance'] });
         },
     });
 }
