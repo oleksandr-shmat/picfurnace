@@ -6,7 +6,16 @@ Laravel 13, Vue 3, Inertia 3, PostgreSQL. The price a user pays is the Pixelforg
 
 - **Deployed:** https://picfurnace.aleksthegreat.dev
 - **Demo account:** `demo@example.com`, password in the submission e-mail (locally `password`)
-- **Admin account:** `admin@example.com`, password in the submission e-mail (locally `password`). It sees the [report](#balances-and-credit) page
+- **Admin account:** `admin@example.com`, password in the submission e-mail (locally `password`). It sees the [report](#admin-report)
+- **What is missing or unverified:** [GAPS.md](GAPS.md)
+
+## Scope
+
+**The brief, all five parts:** generating with the price shown before sending; pricing with the 25% markup and the exact cost recorded afterwards; history with live status, estimated and actual cost and the image; webhooks that are verified and safe against duplicates and wrong order; a public deployment. Behind them sits our own queue in front of Pixelforge, because its limits are shared by the whole account.
+
+**Stretch goals, both done:** the admin report and credit balances (a fake "Add credit", sending blocked when the balance is too low).
+
+**Extra, product feel** (the brief lists UX as a criterion, done after the rest worked): the animation of a generation in progress, short prices with the exact amount on click, readable colour themes, the sign-in page. Presentation only; it touches no money, queue or webhook code.
 
 ## What it does
 
@@ -84,13 +93,17 @@ The credit packs of "Add credit" (5, 10 and 20 dollars) are `credit_packs` in `c
 - **Starting credit.** The seeder gives the demo user $5 once (it checks for an existing `grant`, so each deploy can seed again). The admin gets none.
 - **History before the ledger.** A migration writes a `charge` line for every succeeded generation that was charged before the ledger existed, so the ledger and the generations agree from the first day. A generation that was already running at that moment has no hold: it is only charged.
 - **Fake payments.** "Add credit" only adds a `purchase` line, for the packs in the config. No payment provider is involved and the page says so. There is no manual top-up by an admin: Add credit already covers it.
-- **Report.** `/admin/report` (admin only) is the view of what the service earns. All of it follows the filters in the URL, so a view can be shared as a link:
-    - **Period:** today, 7 or 30 days, this month, last month, all time, or two dates. Days are **UTC** and a generation counts on the day it completed, like Pixelforge's own usage, so a day's provider cost can be compared with `GET /v1/usage` (that comparison is manual). Optionally one user.
-    - **Figures** with the change against the period of the same length right before it and a small trend line: revenue, Pixelforge cost, profit with the margin, generations with the success rate (a generation the user cancelled before it was sent is not a failure), average price, credit sold and credit users still hold. Money is rounded where it is shown and exact on click.
-    - **What is bought:** revenue per quality and per size.
-    - **Days and users** in tables that are paged on the server, sortable, with a total for the period, a search in the users table and a click on a name to look at that user only. Users who left stay in the history.
-    - **CSV export** of both tables with the same filters, all rows (names starting with `=`, `+`, `-` or `@` are quoted so a spreadsheet does not run them as formulas).
-    - **Ledger check:** the charges in the ledger must equal the charges written on the generations, whatever the filters; if they do not, an alert shows both sums.
+
+## Admin report
+
+`/admin/report` (admin only). Every filter, sort and page is in the URL, so a view can be shared.
+
+- **Period:** today, 7 or 30 days, this month, last month, all time, or two dates; optionally one user. Days are **UTC** and a generation counts on the day it completed, like Pixelforge's own usage, so a day's provider cost can be compared with `GET /v1/usage` (by hand).
+- **Figures**, each with the change against the period of the same length before it and a trend line: revenue, Pixelforge cost, profit and margin, generations and success rate (a generation cancelled before it was sent is not a failure), average price, credit sold and credit still held by users.
+- **Breakdown** of revenue by quality and by size.
+- **Days and users:** tables paged and sorted on the server, a total for the period, a search in the users table. Users who left stay in the history.
+- **CSV export** of both tables, all rows. Names starting with `=`, `+`, `-` or `@` are quoted so a spreadsheet does not run them as formulas.
+- **Ledger check:** charges in the ledger must equal the charges on the generations; if not, an alert shows both sums.
 
 ## Webhooks: duplicated, late, lost
 
@@ -107,6 +120,8 @@ Pixelforge delivers events at least once, in any order, and sometimes before our
 Pixelforge limits the **whole account**, across all keys and users: 3 concurrent generations, 60 requests a minute, 500 a day. So users must not be able to starve each other. `GenerationDispatcher` is our own queue: oldest first, one active generation per user, at most 3 active in total, a pause of all sending when a limit is hit (until the end of the UTC day for the daily one), and backoff with `Retry-After` for overload. A generation is "claimed" just before it is sent, and from then on it can no longer be cancelled for free, because it may already exist at Pixelforge.
 
 ## Architecture
+
+**Read in this order:** `Generations/GenerationSubmitter` (submit) → `Generations/GenerationDispatcher` (our queue) → `Pixelforge/Client/PixelforgeClient` (the API) → `Generations/GenerationLifecycle` (the only place that changes a status or charges) → `Generations/Webhooks/WebhookEventHandler` → `Billing/LedgerBilling` (money). A generation moves `pending → queued → processing → succeeded | failed` and never backwards.
 
 ```
 app/
@@ -138,15 +153,6 @@ app/
 - **The scheduler needs a worker process** (`queue:work`) for instant sending; without it the dispatcher still runs every minute.
 - **Images are copied** to our disk for 14 days (configurable) and served only to their author or an admin.
 
-## Quality: what the numbers mean
-
-- **Line coverage 99.1%** (PCOV). It says a line ran, not that anything was checked.
-- **Mutation score about 92%** over the whole backend: the code is changed automatically (`>` to `>=`, a removed call) and the tests must notice. The survivors are constants and equivalent changes, reviewed by hand.
-- **The test count is not a measure.** The suite reports about 760 test cases, but they are roughly 350 `it()` blocks; most of the rest are rows of datasets (one rule, many inputs, for example every malformed money string). I tried to find tests that add nothing: each test was left out in turn and the mutation run repeated. Looked at one class at a time, many tests seemed redundant; with all of them left out together the mutation score fell below its limit and 21 new mutants survived. So the suite is not padded in the sense that matters, and I kept it as it is.
-- Recorded Pixelforge responses are used as fixtures, and expected numbers in tests are computed independently of the code.
-
-**Not covered, said plainly:** there are no browser tests (the frontend has unit tests for its plain logic, lint and types, plus manual checks); concurrency is covered by two targeted tests, not a general harness, and two simultaneous submits against one balance are protected by the user-row lock but not tested with two processes; Pixelforge itself was checked by hand against the live API; PCOV has no branch coverage.
-
 ## Deploying
 
 It runs on one small server (a DigitalOcean droplet, 1 vCPU / 2 GB) with Docker Compose (`compose.prod.yml`). One image (`Dockerfile`) is used for every role:
@@ -172,8 +178,15 @@ Images are copied to a Docker volume (the disk of the server), so no object stor
 
 **Trade-offs.** The image is built on the server, so there is no registry to manage, at the price of a slower deploy and a build that needs swap on a 2 GB machine. A deploy restarts the containers, so for a few seconds the site is not available: this is accepted for a single small server. The database is not replicated; a daily cron job runs `docker/backup.sh` (`pg_dump`, the last 7 dumps are kept), but the dumps lie on the same server, so they protect from a mistake and not from losing the server.
 
+## Quality: what the numbers mean
+
+- **Line coverage 99.1%** (PCOV). It says a line ran, not that anything was checked.
+- **Mutation score about 92%** over the whole backend: the code is changed automatically (`>` to `>=`, a removed call) and the tests must notice. The survivors are constants and equivalent changes, reviewed by hand.
+- **The test count is not a measure.** About 760 cases are roughly 350 `it()` blocks plus dataset rows (one rule, many inputs). Leaving tests out one at a time looked harmless, but all together dropped the mutation score below its limit (21 new surviving mutants), so none were removed.
+- Recorded Pixelforge responses are used as fixtures, and expected numbers in tests are computed independently of the code.
+
+What the tests do not cover (no browser tests, little concurrency, the live API only by hand) is in [GAPS.md](GAPS.md).
+
 ## Not built
 
-- **Real payments.** "Add credit" is a demo. A payment provider would replace only `Billing::addCredit` and add its own webhook.
-- **Automatic reconciliation with `GET /v1/usage`.** The report shows the numbers to compare; the comparison itself is manual.
-- **Registration and password reset.** Accounts come from the seeder, on purpose.
+Real payments (the credit is a demo, as the brief allows), sign-up and password reset (accounts come from the seeder), top-up or refund by an admin, a page for one user's history. Weak and unverified points are in [GAPS.md](GAPS.md).
