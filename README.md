@@ -17,6 +17,10 @@ Laravel 13, Vue 3, Inertia 3, PostgreSQL. The price a user pays is the Pixelforg
 
 **Extra, product feel** (the brief lists UX as a criterion, done after the rest worked): the animation of a generation in progress, short prices with the exact amount on click, readable colour themes, the sign-in page. Presentation only; it touches no money, queue or webhook code.
 
+**Size, for orientation:** the brief's parts and the queue are about 3.8k lines (2.7k PHP, 1.0k Vue/TS). The stretch goals add about 2.7k, the presentation about 0.7k. Tests are 5.4k lines and sit next to the code they check; the rest is migrations, configuration and the starter kit's UI components.
+
+**How it was built:** with an AI coding assistant (Claude Code). I chose the architecture and the trade-offs, reviewed the code, and can walk through and change any part of it.
+
 ## What it does
 
 1. **Studio page.** Prompt, size, quality and up to 4 reference-image links. A price range (minimum, most likely, maximum) follows the form while you type.
@@ -121,7 +125,7 @@ Pixelforge limits the **whole account**, across all keys and users: 3 concurrent
 
 ## Architecture
 
-**Read in this order:** `Generations/GenerationSubmitter` (submit) → `Generations/GenerationDispatcher` (our queue) → `Pixelforge/Client/PixelforgeClient` (the API) → `Generations/GenerationLifecycle` (the only place that changes a status or charges) → `Generations/Webhooks/WebhookEventHandler` → `Billing/LedgerBilling` (money). A generation moves `pending → queued → processing → succeeded | failed` and never backwards.
+**With ten minutes, read only these (the core):** `Generations/GenerationSubmitter` (submit) → `Generations/GenerationDispatcher` (our queue) → `Pixelforge/Client/PixelforgeClient` (the API) → `Generations/GenerationLifecycle` (the only place that changes a status or charges) → `Generations/Webhooks/WebhookEventHandler` → `Billing/LedgerBilling` (money). A generation moves `pending → queued → processing → succeeded | failed` and never backwards.
 
 ```
 app/
